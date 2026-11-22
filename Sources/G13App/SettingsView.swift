@@ -183,7 +183,7 @@ struct ProfileEditor: View {
             set: { color in
                 let ns = NSColor(color).usingColorSpace(.sRGB) ?? .white
                 func byte(_ value: CGFloat) -> UInt8 { UInt8(max(0, min(255, (value * 255).rounded()))) }
-                profile.backlight = RGBColor(red: byte(ns.redComponent), green: byte(ns.greenComponent), blue: byte(ns.blueComponent))
+                profile.backlight = G13Kit.RGBColor(red: byte(ns.redComponent), green: byte(ns.greenComponent), blue: byte(ns.blueComponent))
             }
         )
     }
@@ -206,7 +206,7 @@ struct ProfileEditor: View {
     }
 }
 
-extension RGBColor {
+extension G13Kit.RGBColor {
     var color: Color {
         Color(red: Double(red) / 255, green: Double(green) / 255, blue: Double(blue) / 255)
     }

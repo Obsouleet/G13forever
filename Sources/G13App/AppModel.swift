@@ -154,7 +154,7 @@ final class AppModel: ObservableObject {
 
     func addProfile() {
         var profile = G13Profile(name: "Profil \(library.profiles.count + 1)")
-        profile.backlight = RGBColor(red: 255, green: 255, blue: 255)
+        profile.backlight = G13Kit.RGBColor(red: 255, green: 255, blue: 255)
         library.profiles.append(profile)
     }
 
