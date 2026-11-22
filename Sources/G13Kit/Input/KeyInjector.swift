@@ -3,22 +3,64 @@
 //
 // Braucht die Freigabe unter Systemeinstellungen > Datenschutz & Sicherheit >
 // Bedienungshilfen. Ohne sie verwirft macOS die Events stillschweigend.
+// Ist die Freigabe auf einzelne Apps beschränkt, kommen Tasten nur in diesen Apps an
+// und nur, wenn sie auf Session-Ebene eingespeist werden (siehe Route.standard).
 
 #if canImport(Carbon) && canImport(ApplicationServices)
 import Foundation
 import Carbon
 import ApplicationServices
+import os
 
 public final class KeyInjector {
 
-    private let source = CGEventSource(stateID: .hidSystemState)
+    public static let log = Logger(subsystem: "io.github.obsouleet.g13forever", category: "keys")
+
+    /// Woher die Events stammen und wo sie eingespeist werden.
+    public struct Route: Equatable, CustomStringConvertible {
+        public var sourceState: CGEventSourceStateID
+        public var tap: CGEventTapLocation
+        public init(sourceState: CGEventSourceStateID, tap: CGEventTapLocation) {
+            self.sourceState = sourceState
+            self.tap = tap
+        }
+        /// Session-Ebene: Hier prüft macOS die Freigabe pro Ziel-App (kTCCServicePostEventPerTarget).
+        /// Auf HID-Ebene (.cghidEventTap) zählt nur die globale Freigabe (kTCCServicePostEvent);
+        /// ist die Bedienungshilfen-Freigabe auf einzelne Apps beschränkt, verwirft macOS dort alles.
+        public static let standard = Route(sourceState: .combinedSessionState, tap: .cgSessionEventTap)
+        public var description: String {
+            let s: String
+            switch sourceState {
+            case .hidSystemState: s = "hidSystemState"
+            case .combinedSessionState: s = "combinedSessionState"
+            case .privateState: s = "privateState"
+            @unknown default: s = "\(sourceState.rawValue)"
+            }
+            let t: String
+            switch tap {
+            case .cghidEventTap: t = "cghidEventTap"
+            case .cgSessionEventTap: t = "cgSessionEventTap"
+            case .cgAnnotatedSessionEventTap: t = "cgAnnotatedSessionEventTap"
+            @unknown default: t = "\(tap.rawValue)"
+            }
+            return "\(s)/\(t)"
+        }
+    }
+
+    public var route: Route {
+        didSet { source = CGEventSource(stateID: route.sourceState) }
+    }
+    private var source: CGEventSource?
     /// Wie oft jeder Modifier gerade gehalten wird (mehrere G-Tasten können denselben halten).
     private var modifierCounts: [UInt8: Int] = [:]
     /// Zeichen → (Tastencode, braucht Shift) im aktuellen Tastaturlayout.
     private var layoutMap: [Character: (code: UInt16, shift: Bool)] = [:]
     private var layoutObserver: NSObjectProtocol?
 
-    public init() {
+    public init(route: Route = .standard) {
+        self.route = route
+        self.source = CGEventSource(stateID: route.sourceState)
+        if source == nil { KeyInjector.log.error("CGEventSource(\(route.description, privacy: .public)) ist nil") }
         reloadKeyboardLayout()
         layoutObserver = DistributedNotificationCenter.default().addObserver(
             forName: NSNotification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String),
@@ -34,6 +76,21 @@ public final class KeyInjector {
 
     /// Darf die App Tastendrücke senden (Bedienungshilfen)?
     public static var isTrusted: Bool { AXIsProcessTrusted() }
+
+    /// Darf die App Events in den Event-Strom einspeisen (CGEventPost)?
+    public static var canPostEvents: Bool { CGPreflightPostEventAccess() }
+
+    /// Darf die App Tastendrücke senden? Eine der beiden Freigaben genügt.
+    public static var canSendKeys: Bool { isTrusted || canPostEvents }
+
+    /// Fragt nach der Freigabe zum Einspeisen von Events.
+    @discardableResult
+    public static func requestPostAccess() -> Bool { CGRequestPostEventAccess() }
+
+    /// Schreibt den Stand der Freigaben ins Log.
+    public static func logPermissions(_ context: String) {
+        log.notice("\(context, privacy: .public): AXIsProcessTrusted=\(AXIsProcessTrusted()) CGPreflightPostEventAccess=\(CGPreflightPostEventAccess())")
+    }
 
     /// Fragt nach der Freigabe; macOS zeigt dann einen Dialog mit Link zu den Einstellungen.
     @discardableResult
@@ -80,10 +137,14 @@ public final class KeyInjector {
             let end = min(start + 20, units.count)
             var chunk = Array(units[start..<end])
             for down in [true, false] {
-                guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: down) else { continue }
-                event.flags = []
+                guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: down) else {
+                    KeyInjector.log.error("CGEvent für Text ist nil")
+                    continue
+                }
+                event.flags = KeyInjector.replacingModifiers(of: event.flags, with: [])
                 event.keyboardSetUnicodeString(stringLength: chunk.count, unicodeString: &chunk)
-                event.post(tap: .cghidEventTap)
+                KeyInjector.log.debug("post text(\(chunk.count)) down=\(down) via \(self.route.description, privacy: .public)")
+                event.post(tap: route.tap)
             }
             start = end
         }
@@ -144,11 +205,22 @@ public final class KeyInjector {
         }
     }
 
+    private static let modifierMask: CGEventFlags = [.maskCommand, .maskShift, .maskAlternate, .maskControl, .maskSecondaryFn]
+
+    /// Ersetzt nur die Modifier-Bits, andere Flags (z. B. NonCoalesced) bleiben erhalten.
+    static func replacingModifiers(of flags: CGEventFlags, with modifiers: CGEventFlags) -> CGEventFlags {
+        flags.subtracting(modifierMask).union(modifiers)
+    }
+
     private func post(code: UInt16, down: Bool, extraFlags: CGEventFlags = [], flagsChanged: Bool = false) {
-        guard let event = CGEvent(keyboardEventSource: source, virtualKey: code, keyDown: down) else { return }
+        guard let event = CGEvent(keyboardEventSource: source, virtualKey: code, keyDown: down) else {
+            KeyInjector.log.error("CGEvent(code: \(code)) ist nil")
+            return
+        }
         if flagsChanged { event.type = .flagsChanged }
-        event.flags = currentFlags.union(extraFlags)
-        event.post(tap: .cghidEventTap)
+        event.flags = KeyInjector.replacingModifiers(of: event.flags, with: currentFlags.union(extraFlags))
+        KeyInjector.log.debug("post code=\(code) down=\(down) flags=0x\(String(event.flags.rawValue, radix: 16), privacy: .public) via \(self.route.description, privacy: .public)")
+        event.post(tap: route.tap)
     }
 
     /// Tastencode für einen Tastennamen. Einzelne Zeichen zuerst über das aktuelle Layout.

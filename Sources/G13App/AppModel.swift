@@ -14,7 +14,7 @@ final class AppModel: ObservableObject {
     }
     @Published private(set) var isConnected = false
     @Published private(set) var statusText = "Suche G13 …"
-    @Published private(set) var canSendKeys = KeyInjector.isTrusted
+    @Published private(set) var canSendKeys = KeyInjector.canSendKeys
     /// Zuletzt auf der G13 gedrückte Taste, damit der Editor sie hervorheben kann.
     @Published private(set) var lastPressedKey: G13Key?
     @Published private(set) var launchAtLogin = SMAppService.mainApp.status == .enabled
@@ -59,12 +59,20 @@ final class AppModel: ObservableObject {
             MainActor.assumeIsolated {
                 guard let self else { return }
                 if self.device == nil { self.connect() }
-                let trusted = KeyInjector.isTrusted
-                if trusted != self.canSendKeys { self.canSendKeys = trusted }
+                let trusted = KeyInjector.canSendKeys
+                if trusted != self.canSendKeys {
+                    self.canSendKeys = trusted
+                    KeyInjector.logPermissions("Freigabe geändert")
+                }
             }
         }
         timers.append(timer)
-        if !canSendKeys { KeyInjector.requestTrust() }
+        KeyInjector.logPermissions("Start")
+        // Eine der beiden Freigaben genügt; nur nachfragen, wenn keine da ist.
+        if !KeyInjector.canSendKeys {
+            KeyInjector.requestPostAccess()
+            KeyInjector.requestTrust()
+        }
     }
 
     func shutdown() {
@@ -131,9 +139,17 @@ final class AppModel: ObservableObject {
 
     private func perform(_ output: EngineOutput) {
         switch output {
-        case .keyDown(let combo): if canSendKeys { injector.keyDown(combo) }
-        case .keyUp(let combo): if canSendKeys { injector.keyUp(combo) }
-        case .typeText(let text): if canSendKeys { injector.type(text) }
+        case .keyDown, .keyUp, .typeText:
+            // Nicht stillschweigend verwerfen: immer senden und den Stand der Freigaben loggen.
+            if !canSendKeys { KeyInjector.logPermissions("Senden ohne Freigabe") }
+            KeyInjector.log.notice("Ausgabe: \(String(describing: output), privacy: .public) canSendKeys=\(self.canSendKeys)")
+        default:
+            break
+        }
+        switch output {
+        case .keyDown(let combo): injector.keyDown(combo)
+        case .keyUp(let combo): injector.keyUp(combo)
+        case .typeText(let text): injector.type(text)
         case .switchToSlot(let slot): library.activate(slot: slot)
         case .nextProfile: library.activateNext()
         case .previousProfile: library.activatePrevious()
@@ -209,6 +225,7 @@ final class AppModel: ObservableObject {
     }
 
     func requestKeyPermission() {
+        KeyInjector.requestPostAccess()
         KeyInjector.requestTrust()
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
             NSWorkspace.shared.open(url)

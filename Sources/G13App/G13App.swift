@@ -14,6 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Kein Dock-Symbol, auch wenn die App ohne Info.plist (swift run) läuft.
         NSApp.setActivationPolicy(.accessory)
         model.start()
+        if KeyTest.isRequested { KeyTest.run() }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
