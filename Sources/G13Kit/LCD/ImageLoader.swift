@@ -21,16 +21,6 @@ public struct AnimationFrame: Equatable, Sendable {
     }
 }
 
-/// Wie ein Bild mit anderem Seitenverhältnis auf 160x43 gebracht wird.
-public enum ScaleMode: String, CaseIterable, Sendable {
-    /// Ganzes Bild sichtbar, Ränder bleiben leer.
-    case fit
-    /// Display komplett gefüllt, überstehende Teile werden abgeschnitten.
-    case fill
-    /// Auf 160x43 verzerrt.
-    case stretch
-}
-
 public enum ImageLoaderError: Error, CustomStringConvertible {
     case cannotOpen(URL)
     case noFrames(URL)

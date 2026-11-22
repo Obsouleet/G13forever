@@ -52,6 +52,7 @@ public final class G13Device {
     private let manager: ManagerHandle
 
     private var inputHandler: ((G13InputReport) -> Void)?
+    private var removalHandler: (() -> Void)?
     private let inputBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: 64)
 
     /// Schließt den gemeinsamen HID-Manager, sobald das letzte Gerät freigegeben ist.
@@ -68,7 +69,7 @@ public final class G13Device {
 
     deinit {
         if inputHandler != nil {
-            IOHIDDeviceUnscheduleFromRunLoop(hidDevice, CFRunLoopGetCurrent(), CFRunLoopMode.defaultMode.rawValue)
+            IOHIDDeviceUnscheduleFromRunLoop(hidDevice, CFRunLoopGetCurrent(), CFRunLoopMode.commonModes.rawValue)
         }
         inputBuffer.deallocate()
     }
@@ -152,13 +153,41 @@ public final class G13Device {
         guard first else { return }
         let context = Unmanaged.passUnretained(self).toOpaque()
         IOHIDDeviceRegisterInputReportCallback(hidDevice, inputBuffer, 64, g13InputReportCallback, context)
-        IOHIDDeviceScheduleWithRunLoop(hidDevice, CFRunLoopGetCurrent(), CFRunLoopMode.defaultMode.rawValue)
+        IOHIDDeviceScheduleWithRunLoop(hidDevice, CFRunLoopGetCurrent(), CFRunLoopMode.commonModes.rawValue)
+    }
+
+    /// Wird aufgerufen, wenn die G13 abgezogen wird. Kommt über denselben
+    /// RunLoop wie die Input-Reports, also `startInputMonitoring` ebenfalls aufrufen.
+    public func onRemoval(_ handler: @escaping () -> Void) {
+        let first = removalHandler == nil
+        removalHandler = handler
+        guard first else { return }
+        let context = Unmanaged.passUnretained(self).toOpaque()
+        IOHIDDeviceRegisterRemovalCallback(hidDevice, g13RemovalCallback, context)
+    }
+
+    /// Meldet Input-Reports und Abziehen nicht mehr.
+    public func stopMonitoring() {
+        if inputHandler != nil {
+            IOHIDDeviceUnscheduleFromRunLoop(hidDevice, CFRunLoopGetCurrent(), CFRunLoopMode.commonModes.rawValue)
+        }
+        inputHandler = nil
+        removalHandler = nil
+    }
+
+    fileprivate func handleRemoval() {
+        removalHandler?()
     }
 
     fileprivate func handleInput(_ bytes: [UInt8]) {
         guard let report = G13InputReport(bytes: bytes) else { return }
         inputHandler?(report)
     }
+}
+
+private func g13RemovalCallback(context: UnsafeMutableRawPointer?, result: IOReturn, sender: UnsafeMutableRawPointer?) {
+    guard let context else { return }
+    Unmanaged<G13Device>.fromOpaque(context).takeUnretainedValue().handleRemoval()
 }
 
 private func g13InputReportCallback(

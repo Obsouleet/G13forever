@@ -10,6 +10,16 @@ public enum MonochromeMode: Equatable, Sendable {
     case floydSteinberg
 }
 
+/// Wie ein Bild mit anderem Seitenverhältnis auf 160x43 gebracht wird.
+public enum ScaleMode: String, CaseIterable, Codable, Sendable {
+    /// Ganzes Bild sichtbar, Ränder bleiben leer.
+    case fit
+    /// Display komplett gefüllt, überstehende Teile werden abgeschnitten.
+    case fill
+    /// Auf 160x43 verzerrt.
+    case stretch
+}
+
 /// Ein Graustufenbild genau in Displaygröße.
 public struct GrayscaleImage: Equatable, Sendable {
     public let width: Int
