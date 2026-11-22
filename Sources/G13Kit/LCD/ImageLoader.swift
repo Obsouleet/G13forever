@@ -72,11 +72,11 @@ public enum ImageLoader {
         return frames
     }
 
-    /// Rendert ein CGImage auf weißen Hintergrund in ein 160x43-Graustufenbild.
+    /// Rendert ein CGImage auf schwarzen Hintergrund (= Pixel aus) in ein 160x43-Graustufenbild.
     public static func grayscale(from image: CGImage, scale: ScaleMode) throws -> GrayscaleImage {
         let width = LCDFrame.width
         let height = LCDFrame.height
-        var pixels = [UInt8](repeating: 255, count: width * height)
+        var pixels = [UInt8](repeating: 0, count: width * height)
 
         let ok: Bool = pixels.withUnsafeMutableBytes { raw in
             guard let context = CGContext(
@@ -90,7 +90,7 @@ public enum ImageLoader {
             ) else { return false }
 
             context.interpolationQuality = .high
-            context.setFillColor(gray: 1, alpha: 1)
+            context.setFillColor(gray: 0, alpha: 1)
             context.fill(CGRect(x: 0, y: 0, width: width, height: height))
             context.draw(image, in: targetRect(for: image, scale: scale))
             return true

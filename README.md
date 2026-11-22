@@ -3,8 +3,8 @@
 macOS-Treiber für die Logitech G13 in Swift, mit Bildern und GIFs auf dem
 160x43-Display. Läuft ohne Kernel-Treiber und ohne root über IOKit HID.
 
-> **Stand:** Grundgerüst mit Display-Prototyp. Noch nicht mit echter
-> Hardware getestet. Die Menüleisten-App mit Profilen und Tastenbelegung
+> **Stand:** Grundgerüst mit Display-Prototyp, auf echter Hardware geprüft
+> (Text, Testbild, Hintergrundfarbe). Die Menüleisten-App mit Profilen und Tastenbelegung
 > folgt in den nächsten Schritten.
 
 ## Aufbau
@@ -50,7 +50,7 @@ swift run g13ctl keys                       # Tasten und Joystick mitlesen
 ```
 
 Bildoptionen: `--fit` (Standard), `--fill`, `--stretch`, `--threshold 128`
-statt Dithering, `--invert` für hell-auf-dunkel gestaltete Grafiken,
+statt Dithering, `--invert`, wenn dunkle statt helle Bildteile leuchten sollen,
 `--invert-display` kehrt den fertigen Frame um, `--once` spielt ein GIF nur
 einmal ab.
 
@@ -62,13 +62,13 @@ macOS kann den Zugriff auf HID-Geräte blockieren. Dann unter
 **Systemeinstellungen > Datenschutz & Sicherheit > Eingabeüberwachung** das
 Terminal (bzw. später die App) erlauben und den Befehl erneut starten.
 
-## Was beim ersten Hardwaretest geprüft wird
+## Hardware-Erkenntnisse
 
-1. `g13ctl info` findet die G13 und meldet einen Output-Report von mindestens 992 Byte.
-2. `g13ctl pattern` zeigt das Testbild richtig herum (gefülltes Quadrat oben links).
-3. Ob gesetzte Pixel dunkel oder hell erscheinen. Danach richtet sich der Standard für `--invert`.
-4. Linux-Treiber schicken vor jedem Frame einen USB-"init"-Control-Transfer.
-   golgote/G13 kommt auf macOS ohne aus. Bleibt das Display leer, ist das die erste Spur.
+- `g13ctl info` meldet einen Output-Report von 992 Byte, genau ein LCD-Frame.
+- Gesetzte Pixel leuchten hell. Bilder werden deshalb so umgesetzt, dass helle
+  Bildteile leuchten (wie auf einem Bildschirm).
+- Der USB-"init"-Control-Transfer der Linux-Treiber ist auf macOS nicht nötig:
+  Frames per HID-Output-Report 0x03 kommen direkt an.
 
 ## Herkunft und Lizenzen
 

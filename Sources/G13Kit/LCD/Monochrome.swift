@@ -4,7 +4,7 @@
 
 /// Wie Graustufen auf 1 Bit reduziert werden.
 public enum MonochromeMode: Equatable, Sendable {
-    /// Fester Schwellwert: Helligkeit < threshold wird zu "an".
+    /// Fester Schwellwert: Helligkeit >= threshold wird zu "an".
     case threshold(UInt8)
     /// Floyd-Steinberg-Fehlerdiffusion, gut für Fotos und Verläufe.
     case floydSteinberg
@@ -38,10 +38,10 @@ extension LCDFrame {
 
     /// Erzeugt einen Frame aus einem Graustufenbild.
     ///
-    /// Standard: dunkle Bildpunkte werden zu gesetzten LCD-Pixeln, das Bild
-    /// erscheint also wie gedruckt. Mit `invert: true` gilt das Umgekehrte
-    /// (helle Punkte = gesetzt), passend für Grafiken, die wie die Beispiele
-    /// aus jonas-werner/g13-configurator "weiß auf schwarz" gestaltet sind.
+    /// Gesetzte Pixel leuchten auf der G13 hell (auf echter Hardware geprüft).
+    /// Standard daher: helle Bildpunkte werden zu gesetzten Pixeln, das Bild
+    /// erscheint wie auf einem Bildschirm. Das entspricht auch den Grafiken
+    /// aus jonas-werner/g13-configurator. Mit `invert: true` gilt das Umgekehrte.
     public init(grayscale image: GrayscaleImage, mode: MonochromeMode = .floydSteinberg, invert: Bool = false) {
         self.init()
         let w = min(image.width, LCDFrame.width)
@@ -51,8 +51,8 @@ extension LCDFrame {
         case .threshold(let limit):
             for y in 0..<h {
                 for x in 0..<w {
-                    let dark = image[x, y] < limit
-                    self[x, y] = dark != invert
+                    let bright = image[x, y] >= limit
+                    self[x, y] = bright != invert
                 }
             }
 
@@ -72,7 +72,7 @@ extension LCDFrame {
                     add(x, y + 1, error * 5 / 16)
                     add(x + 1, y + 1, error * 1 / 16)
                     if x < w, y < h {
-                        self[x, y] = (new == 0) != invert
+                        self[x, y] = (new == 255) != invert
                     }
                 }
             }

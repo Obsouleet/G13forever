@@ -12,7 +12,7 @@
 // (nur Byte 0 = 0x03 gesetzt), danach die 960 Byte Pixeldaten, zusammen
 // 992 Byte.
 
-/// Ein Bild für das G13-Display. `true` heißt: Pixel ist "an".
+/// Ein Bild für das G13-Display. `true` heißt: Pixel ist "an" und leuchtet hell.
 public struct LCDFrame: Equatable, Sendable {
 
     public static let width = 160

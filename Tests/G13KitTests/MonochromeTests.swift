@@ -3,18 +3,18 @@ import XCTest
 
 final class MonochromeTests: XCTestCase {
 
-    func testBlackImageLightsEverything() {
-        let frame = LCDFrame(grayscale: GrayscaleImage(fill: 0), mode: .threshold(128))
+    func testWhiteImageLightsEverything() {
+        let frame = LCDFrame(grayscale: GrayscaleImage(fill: 255), mode: .threshold(128))
         XCTAssertEqual(frame.litPixelCount, 160 * 43)
     }
 
-    func testWhiteImageLightsNothing() {
-        let frame = LCDFrame(grayscale: GrayscaleImage(fill: 255), mode: .floydSteinberg)
+    func testBlackImageLightsNothing() {
+        let frame = LCDFrame(grayscale: GrayscaleImage(fill: 0), mode: .floydSteinberg)
         XCTAssertEqual(frame.litPixelCount, 0)
     }
 
     func testInvertSwapsMeaning() {
-        let frame = LCDFrame(grayscale: GrayscaleImage(fill: 255), mode: .threshold(128), invert: true)
+        let frame = LCDFrame(grayscale: GrayscaleImage(fill: 0), mode: .threshold(128), invert: true)
         XCTAssertEqual(frame.litPixelCount, 160 * 43)
     }
 
@@ -25,8 +25,8 @@ final class MonochromeTests: XCTestCase {
     }
 
     func testThresholdKeepsPosition() {
-        var image = GrayscaleImage(fill: 255)
-        image[3, 40] = 0
+        var image = GrayscaleImage(fill: 0)
+        image[3, 40] = 255
         let frame = LCDFrame(grayscale: image, mode: .threshold(128))
         XCTAssertEqual(frame.litPixelCount, 1)
         XCTAssertTrue(frame[3, 40])

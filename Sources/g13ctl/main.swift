@@ -29,7 +29,7 @@ Befehle:
 Optionen für image/preview:
   --fit | --fill | --stretch   Skalierung auf 160x43 (Standard: --fit)
   --threshold <0-255>          Fester Schwellwert statt Dithering
-  --invert                     Helle statt dunkle Bildpunkte setzen
+  --invert                     Dunkle statt helle Bildpunkte leuchten lassen
   --once                       Animation nur einmal abspielen
   --invert-display             Fertigen Frame invertieren (auch für text/pattern)
 """
