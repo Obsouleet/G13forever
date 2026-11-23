@@ -18,12 +18,40 @@ driver, no root.
 
 ## Get it
 
-**There is no download. You build the app yourself**, because a download that
-opens without warnings needs a paid Apple developer membership, and I'm not
-paying for one. You don't need one either: it's free, and copy and paste will
-get you there.
+You need macOS 14 or newer. Download the finished app, or build it yourself.
 
-### 👉 [Step-by-step build guide](BUILDING.md) (no programming knowledge needed)
+### Download
+
+1. Download
+   [**G13forever.zip**](https://github.com/Obsouleet/G13forever/releases/latest/download/G13forever.zip)
+   ([all versions](https://github.com/Obsouleet/G13forever/releases)), open it,
+   and move **G13forever** to your **Applications** folder.
+2. Open G13forever. **macOS will refuse the first time** and say it can't check
+   the app: a download that opens without this warning needs a paid Apple
+   developer membership, and I'm not paying for one. Close the message. Don't
+   move the app to the Trash.
+3. Open **System Settings > Privacy & Security**, scroll down to **Security**,
+   and click **Open Anyway** next to G13forever. Confirm with your password.
+   The button is only there for about an hour after step 2; open the app again
+   if it's gone.
+4. A keyboard icon appears in the menu bar. Plug in the G13 and
+   [allow key presses](BUILDING.md#step-6-allow-key-presses).
+
+Only do this if you trust this project: "Open Anyway" skips Apple's check for
+malware. If you'd rather not, build the app from the source code instead.
+
+**Updates:** Quit the app, replace it in Applications with the new download, and
+repeat steps 2 and 3. **Then you must allow key presses again**, because macOS
+treats every version as a new app: go to **System Settings > Privacy & Security >
+Accessibility**, remove the old G13forever entry with **−**, and add the app
+again with **+**. Your profiles are kept.
+
+### Build it yourself
+
+It's free, and copy and paste will get you there. No Apple developer membership,
+no warning, and with your own free certificate the permission survives updates.
+
+👉 **[Step-by-step build guide](BUILDING.md)** (no programming knowledge needed)
 
 Short version, if you already have Xcode:
 
@@ -34,9 +62,11 @@ scripts/build-app.sh
 open build/G13forever.app
 ```
 
-Requirements: macOS 14 or newer and Xcode (free). The Command Line Tools alone
-are not enough. Tested with Xcode 27.2 on macOS 27.3 on Apple silicon; older
-versions and Intel Macs have not been tested.
+Building needs Xcode (free); the Command Line Tools alone are not enough.
+
+Tested with Xcode 27.2 on macOS 27.3 on Apple silicon. The download also
+contains a version for Intel Macs, but neither Intel Macs nor older macOS
+versions have been tested.
 
 ## What it does
 
@@ -129,6 +159,15 @@ The interface texts are in English in the code. To add a language, copy
 sides, and add the language to `CFBundleLocalizations` in `Resources/Info.plist`.
 Translations only apply to the app built with `scripts/build-app.sh`; `swift run`
 and `g13ctl` are always in English.
+
+To publish a release, push a tag such as `v1.2.3`. GitHub Actions runs the
+tests, builds the app for Apple silicon and Intel, and attaches `G13forever.zip`
+to the release ([release.yml](.github/workflows/release.yml)). The version
+number comes from the tag. To build the same ZIP locally:
+
+```sh
+UNIVERSAL=1 ZIP=1 VERSION=1.2.3 scripts/build-app.sh
+```
 
 Hardware notes:
 
