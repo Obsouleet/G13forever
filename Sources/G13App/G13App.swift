@@ -35,7 +35,7 @@ struct G13foreverApp: App {
         }
         .menuBarExtraStyle(.menu)
 
-        Window("G13 Profile", id: SettingsView.windowID) {
+        Window("G13 Profiles", id: SettingsView.windowID) {
             SettingsView()
                 .environmentObject(delegate.model)
                 .frame(minWidth: 1180, minHeight: 680)
@@ -51,7 +51,7 @@ struct MenuContent: View {
     var body: some View {
         Text(model.statusText)
         if !model.canSendKeys {
-            Button("Tastendrücke erlauben (Bedienungshilfen) …") { model.requestKeyPermission() }
+            Button("Allow Key Presses (Accessibility)…") { model.requestKeyPermission() }
         }
         Divider()
         ForEach(Array(model.library.profiles.enumerated()), id: \.element.id) { index, profile in
@@ -63,17 +63,17 @@ struct MenuContent: View {
             }
         }
         Divider()
-        Button("Profile bearbeiten …") {
+        Button("Edit Profiles…") {
             openWindow(id: SettingsView.windowID)
             NSApp.activate(ignoringOtherApps: true)
         }
         .keyboardShortcut(",")
-        Toggle("Bei Anmeldung starten", isOn: Binding(
+        Toggle("Launch at Login", isOn: Binding(
             get: { model.launchAtLogin },
             set: { model.setLaunchAtLogin($0) }
         ))
         Divider()
-        Button("G13forever beenden") { NSApp.terminate(nil) }
+        Button("Quit G13forever") { NSApp.terminate(nil) }
             .keyboardShortcut("q")
     }
 }

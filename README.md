@@ -40,12 +40,11 @@ versions and Intel Macs have not been tested.
 
 ## What it does
 
-The app's interface is currently in German. This README gives the German
-labels where you need them.
+The app speaks English, and German if your Mac does.
 
 A keyboard icon appears in the menu bar. From there you pick the active
-profile, open the editor (**Profile bearbeiten …**) and turn on launch at
-login (**Bei Anmeldung starten**). Each profile has:
+profile, open the editor (**Edit Profiles…**) and turn on **Launch at Login**.
+Each profile has:
 
 - **Name and backlight color** of the G13.
 - **Image or GIF** for the display, with preview, scaling, dithering or
@@ -54,7 +53,7 @@ login (**Bei Anmeldung starten**). Each profile has:
 - **Joystick**: off, arrow keys, or W/A/S/D.
 - **Key bindings** for G1–G22, the thumb keys, the stick, BD, L1–L4 and
   M1–M3/MR: a keyboard shortcut (e.g. `cmd+shift+4`, `f5`, `space`, or recorded
-  with **Aufnehmen**), typed text, a switch to a specific profile, or the
+  with **Record**), typed text, a switch to a specific profile, or the
   next/previous profile. Shortcuts stay pressed as long as you hold the G13
   key, so they work in games too. Pick a key by clicking it in the picture or
   by pressing it on the G13; its settings appear right below. Bound keys are
@@ -69,9 +68,9 @@ images next to it in the `Images` folder.
 
 ### Permissions
 
-- **Accessibility** (Bedienungshilfen): required, so the app may send key
+- **Accessibility**: required, so the app may send key
   presses. The app asks on first launch.
-- **Input Monitoring** (Eingabeüberwachung): only if macOS refuses access to
+- **Input Monitoring**: only if macOS refuses access to
   the G13.
 
 The [build guide](BUILDING.md#step-6-allow-key-presses) shows where to find both.
@@ -121,8 +120,15 @@ swift test
 | `Sources/G13Kit/Artwork`, `Sources/G13Kit/Resources` | Picture of the G13 (`g13.svg`) and the clickable key areas (`g13-keys.svg`) |
 | `Sources/G13Kit/Device` | `G13Device` (IOKit HID: find, send LCD frames, backlight, M LEDs, read keys), `G13InputReport` |
 | `Sources/G13App` | Menu bar app (SwiftUI) |
+| `Resources` | `Info.plist` and translations |
 | `Sources/g13ctl` | Command line tool |
 | `Tests/G13KitTests` | Unit tests |
+
+The interface texts are in English in the code. To add a language, copy
+`Resources/de.lproj` to e.g. `Resources/fr.lproj`, translate the right-hand
+sides, and add the language to `CFBundleLocalizations` in `Resources/Info.plist`.
+Translations only apply to the app built with `scripts/build-app.sh`; `swift run`
+and `g13ctl` are always in English.
 
 Hardware notes:
 

@@ -89,11 +89,11 @@ public struct KeyCombo: Hashable, Sendable, CustomStringConvertible {
     }
 
     static let displayNames: [String: String] = [
-        "return": "↩", "tab": "⇥", "space": "Leertaste", "delete": "⌫", "forwarddelete": "⌦",
+        "return": "↩", "tab": "⇥", "space": String(localized: "Space"), "delete": "⌫", "forwarddelete": "⌦",
         "escape": "esc", "left": "←", "right": "→", "up": "↑", "down": "↓",
         "home": "↖", "end": "↘", "pageup": "⇞", "pagedown": "⇟", "capslock": "⇪",
-        "command": "⌘", "rightcommand": "⌘ rechts", "shift": "⇧", "rightshift": "⇧ rechts",
-        "option": "⌥", "rightoption": "⌥ rechts", "control": "⌃", "rightcontrol": "⌃ rechts",
+        "command": "⌘", "rightcommand": String(localized: "right ⌘"), "shift": "⇧", "rightshift": String(localized: "right ⇧"),
+        "option": "⌥", "rightoption": String(localized: "right ⌥"), "control": "⌃", "rightcontrol": String(localized: "right ⌃"),
         "kpenter": "⌤",
     ]
 
@@ -101,7 +101,7 @@ public struct KeyCombo: Hashable, Sendable, CustomStringConvertible {
         if let name = displayNames[key] { return name }
         if key.count == 1 { return key.uppercased() }
         if key.hasPrefix("f"), Int(key.dropFirst()) != nil { return key.uppercased() }
-        if key.hasPrefix("kp") { return "Ziffernblock " + key.dropFirst(2) }
+        if key.hasPrefix("kp") { return String(localized: "Keypad \(String(key.dropFirst(2)))") }
         return key
     }
 }

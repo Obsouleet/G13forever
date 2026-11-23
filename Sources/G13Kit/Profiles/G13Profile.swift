@@ -157,7 +157,7 @@ extension G13Profile: Codable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
-        name = try c.decodeIfPresent(String.self, forKey: .name) ?? "Profil"
+        name = try c.decodeIfPresent(String.self, forKey: .name) ?? String(localized: "Profile")
         backlight = try c.decodeIfPresent(RGBColor.self, forKey: .backlight) ?? RGBColor(red: 0, green: 120, blue: 255)
         display = try c.decodeIfPresent(DisplaySettings.self, forKey: .display) ?? DisplaySettings()
         joystick = (try? c.decodeIfPresent(JoystickMode.self, forKey: .joystick)) ?? .off

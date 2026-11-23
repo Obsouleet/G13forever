@@ -11,12 +11,12 @@ enum ActionKind: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .none: return "Nichts"
-        case .keys: return "Tastenkürzel"
-        case .text: return "Text tippen"
-        case .profile: return "Profil wechseln"
-        case .next: return "Nächstes Profil"
-        case .previous: return "Vorheriges Profil"
+        case .none: return String(localized: "Nothing")
+        case .keys: return String(localized: "Keyboard shortcut")
+        case .text: return String(localized: "Type text")
+        case .profile: return String(localized: "Switch profile")
+        case .next: return String(localized: "Next profile")
+        case .previous: return String(localized: "Previous profile")
         }
     }
 
@@ -46,11 +46,11 @@ enum ActionKind: String, CaseIterable, Identifiable {
 extension G13Key {
     var label: String {
         switch self {
-        case .left: return "Daumentaste links"
-        case .right: return "Daumentaste unten"
-        case .stick: return "Stick drücken"
-        case .bd: return "BD (unter Display)"
-        case .l1, .l2, .l3, .l4: return "\(rawValue) (unter Display)"
+        case .left: return String(localized: "Left thumb key")
+        case .right: return String(localized: "Lower thumb key")
+        case .stick: return String(localized: "Press stick")
+        case .bd: return String(localized: "BD (below display)")
+        case .l1, .l2, .l3, .l4: return String(localized: "\(rawValue) (below display)")
         default: return rawValue
         }
     }
@@ -66,7 +66,7 @@ struct KeyEditor: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(key.label).font(.headline)
             HStack(spacing: 12) {
-                Picker("Aktion", selection: kindBinding) {
+                Picker("Action", selection: kindBinding) {
                     ForEach(ActionKind.allCases) { Text($0.title).tag($0) }
                 }
                 .labelsHidden()
@@ -75,7 +75,7 @@ struct KeyEditor: View {
                 Spacer(minLength: 0)
             }
             .frame(minHeight: 28)
-            Text("Taste im Bild anklicken oder auf der G13 drücken. Tastenkürzel werden gehalten, solange die G13-Taste gedrückt ist.")
+            Text("Click a key in the picture or press it on the G13. Shortcuts stay pressed as long as you hold the G13 key.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -89,14 +89,14 @@ struct KeyEditor: View {
         case .keys(let combo)?:
             ShortcutField(combo: Binding(get: { combo }, set: { action = .keys($0) }))
         case .text(let text)?:
-            TextField("Text, der getippt wird", text: Binding(get: { text }, set: { action = .text($0) }))
+            TextField("Text to type", text: Binding(get: { text }, set: { action = .text($0) }))
         case .profileSlot(let slot)?:
             Picker("", selection: Binding(get: { slot }, set: { action = .profileSlot($0) })) {
                 ForEach(Array(profileNames.enumerated()), id: \.offset) { index, name in
-                    Text("\(index + 1): \(name)").tag(index + 1)
+                    Text(verbatim: "\(index + 1): \(name)").tag(index + 1)
                 }
                 if slot > profileNames.count {
-                    Text("\(slot): (fehlt)").tag(slot)
+                    Text("\(slot): (missing)").tag(slot)
                 }
             }
             .labelsHidden()
@@ -116,7 +116,7 @@ struct KeyEditor: View {
     }
 }
 
-/// Tastenkürzel als Text ("cmd+shift+4") eingeben oder per "Aufnehmen" festlegen.
+/// Tastenkürzel als Text ("cmd+shift+4") eingeben oder per Aufnahme festlegen.
 struct ShortcutField: View {
     @Binding var combo: KeyCombo
     @State private var text = ""
@@ -126,7 +126,7 @@ struct ShortcutField: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            TextField("z. B. cmd+shift+4", text: $text)
+            TextField("e.g. cmd+shift+4", text: $text)
                 .frame(width: 150)
                 .foregroundStyle(isValid ? Color.primary : Color.red)
                 .onChange(of: text) { _, newValue in
@@ -135,7 +135,7 @@ struct ShortcutField: View {
             Text(combo.displayString)
                 .foregroundStyle(.secondary)
                 .frame(minWidth: 70, alignment: .leading)
-            Button(monitor == nil ? "Aufnehmen" : "Taste drücken …") {
+            Button(monitor == nil ? "Record" : "Press a key…") {
                 monitor == nil ? startRecording() : stopRecording()
             }
         }

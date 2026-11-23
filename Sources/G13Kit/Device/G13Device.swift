@@ -22,15 +22,15 @@ public enum G13Error: Error, CustomStringConvertible {
     public var description: String {
         switch self {
         case .managerOpenFailed(let code):
-            var text = "HID-Manager konnte nicht geöffnet werden (\(G13Error.hex(code)))."
+            var text = String(localized: "The HID manager could not be opened (\(G13Error.hex(code))).")
             if code == G13Error.notPermitted {
-                text += " macOS verweigert den Zugriff: Systemeinstellungen > Datenschutz & Sicherheit > Eingabeüberwachung, dort das Terminal bzw. die App erlauben."
+                text += " " + String(localized: "macOS denies access: allow the app or your terminal under System Settings > Privacy & Security > Input Monitoring.")
             }
             return text
         case .notFound:
-            return "Keine Logitech G13 gefunden (USB 046d:c21c). Ist sie eingesteckt?"
+            return String(localized: "No Logitech G13 found (USB 046d:c21c). Is it plugged in?")
         case .reportFailed(let what, let code):
-            return "\(what) fehlgeschlagen (\(G13Error.hex(code)))."
+            return String(localized: "\(what) failed (\(G13Error.hex(code))).")
         }
     }
 
@@ -120,17 +120,17 @@ public final class G13Device {
 
     /// Schickt einen Frame aufs Display.
     public func send(_ frame: LCDFrame) throws {
-        try setReport(.output, id: LCDFrame.reportID, bytes: frame.reportBytes(), what: "LCD-Frame senden")
+        try setReport(.output, id: LCDFrame.reportID, bytes: frame.reportBytes(), what: String(localized: "Sending the LCD frame"))
     }
 
     /// Setzt die RGB-Hintergrundbeleuchtung.
     public func setBacklight(red: UInt8, green: UInt8, blue: UInt8) throws {
-        try setReport(.feature, id: 0x07, bytes: [0x07, red, green, blue, 0x00], what: "Hintergrundfarbe setzen")
+        try setReport(.feature, id: 0x07, bytes: [0x07, red, green, blue, 0x00], what: String(localized: "Setting the backlight color"))
     }
 
     /// Schaltet die LEDs über M1/M2/M3/MR.
     public func setModeLEDs(_ leds: G13ModeLEDs) throws {
-        try setReport(.feature, id: 0x05, bytes: [0x05, leds.rawValue, 0x00, 0x00, 0x00], what: "M-LEDs setzen")
+        try setReport(.feature, id: 0x05, bytes: [0x05, leds.rawValue, 0x00, 0x00, 0x00], what: String(localized: "Setting the M LEDs"))
     }
 
     enum ReportKind { case output, feature }
