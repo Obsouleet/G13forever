@@ -1,124 +1,142 @@
 # G13forever
 
-macOS-Treiber für die Logitech G13 in Swift, mit Bildern und GIFs auf dem
-160x43-Display. Läuft ohne Kernel-Treiber und ohne root über IOKit HID.
+**A macOS driver for the Logitech G13.** Profiles, key bindings, and your own
+images or animated GIFs on the 160x43 display. A menu bar app, no kernel
+driver, no root.
 
-> **Stand:** Menüleisten-App mit Profilen, Tastenbelegung und Bild/GIF pro
-> Profil. Dazu das Kommandozeilen-Werkzeug `g13ctl` zum Ausprobieren.
+> [!IMPORTANT]
+> **Built with Claude.** This project was made with Claude, Anthropic's AI:
+> Claude writes the code and the docs (yes, this README too), I decide where it
+> goes and test it on a real G13. If you have a problem with AI, no hard
+> feelings, but this is not the project for you. Feel free to look elsewhere.
+> Everyone else: welcome!
 
-## Aufbau
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-dark.png">
+  <img alt="The profile editor: a picture of the G13 with clickable keys, next to the backlight, display and joystick settings" src="docs/screenshot-light.png">
+</picture>
 
-| Teil | Inhalt |
-| --- | --- |
-| `Sources/G13Kit/LCD` | `LCDFrame` (160x43-Framebuffer, 992-Byte-Report), 5x7-Schrift, Graustufen→1 Bit (Schwellwert oder Floyd-Steinberg), `ImageLoader` für PNG/JPEG/GIF |
-| `Sources/G13Kit/Profiles` | `G13Profile`/`ProfileLibrary` (JSON), `KeyCombo` und `KeyCodes` (Tastenkürzel), `BindingEngine` (Tasten → Aktionen), `ProfileRenderer` |
-| `Sources/G13Kit/Input` | `KeyInjector`: schickt Tastendrücke und Text über CGEvent an macOS |
-| `Sources/G13Kit/Artwork`, `Sources/G13Kit/Resources` | Bild der G13 (`g13.svg`) und die Klickflächen der Tasten (`g13-keys.svg`) |
-| `Sources/G13App` | Menüleisten-App (SwiftUI) |
-| `Sources/G13Kit/Device` | `G13Device` (IOKit HID: finden, LCD-Frame senden, Hintergrundfarbe, M-LEDs, Tasten mitlesen), `G13InputReport` |
-| `Sources/g13ctl` | Kommandozeilen-Werkzeug zum Ausprobieren |
-| `Tests/G13KitTests` | Tests für Bitlayout, Schrift, Dithering und Tasten-Reports |
+## Get it
 
-## Voraussetzungen
+**There is no download. You build the app yourself**, because a download that
+opens without warnings needs a paid Apple developer membership, and I'm not
+paying for one. You don't need one either: it's free, and copy and paste will
+get you there.
 
-- macOS 14 oder neuer
-- Xcode 15 oder neuer (oder die Command Line Tools mit Swift 5.9+)
+### 👉 [Step-by-step build guide](BUILDING.md) (no programming knowledge needed)
 
-## Bauen und testen
+Short version, if you already have Xcode:
+
+```sh
+git clone https://github.com/Obsouleet/G13forever.git
+cd G13forever
+scripts/build-app.sh
+open build/G13forever.app
+```
+
+Requirements: macOS 14 or newer and Xcode (free). The Command Line Tools alone
+are not enough. Tested with Xcode 27.2 on macOS 27.3 on Apple silicon; older
+versions and Intel Macs have not been tested.
+
+## What it does
+
+The app's interface is currently in German. This README gives the German
+labels where you need them.
+
+A keyboard icon appears in the menu bar. From there you pick the active
+profile, open the editor (**Profile bearbeiten …**) and turn on launch at
+login (**Bei Anmeldung starten**). Each profile has:
+
+- **Name and backlight color** of the G13.
+- **Image or GIF** for the display, with preview, scaling, dithering or
+  threshold, and invert. Without an image, the display shows the profile name.
+  Graphics of exactly 160x43 pixels look best.
+- **Joystick**: off, arrow keys, or W/A/S/D.
+- **Key bindings** for G1–G22, the thumb keys, the stick, BD, L1–L4 and
+  M1–M3/MR: a keyboard shortcut (e.g. `cmd+shift+4`, `f5`, `space`, or recorded
+  with **Aufnehmen**), typed text, a switch to a specific profile, or the
+  next/previous profile. Shortcuts stay pressed as long as you hold the G13
+  key, so they work in games too. Pick a key by clicking it in the picture or
+  by pressing it on the G13; its settings appear right below. Bound keys are
+  labeled green.
+
+By default, M1, M2 and M3 switch to profiles 1, 2 and 3, and the matching LED
+lights up. If the profile has an image, its name flashes up first when you
+switch.
+
+Profiles are stored in `~/Library/Application Support/G13forever/profiles.json`,
+images next to it in the `Images` folder.
+
+### Permissions
+
+- **Accessibility** (Bedienungshilfen): required, so the app may send key
+  presses. The app asks on first launch.
+- **Input Monitoring** (Eingabeüberwachung): only if macOS refuses access to
+  the G13.
+
+The [build guide](BUILDING.md#step-6-allow-key-presses) shows where to find both.
+
+## Command line tool: g13ctl
+
+Without a G13 (preview in the terminal only):
+
+```sh
+swift run g13ctl preview --pattern
+swift run g13ctl preview --text "Hello G13"
+swift run g13ctl preview ~/Pictures/logo.png --fill
+```
+
+With a G13 plugged in (quit the app first so they don't compete for the display):
+
+```sh
+swift run g13ctl info                       # is the G13 found?
+swift run g13ctl pattern                    # test pattern
+swift run g13ctl text "Hello"
+swift run g13ctl image ~/Pictures/animation.gif
+swift run g13ctl backlight 255 80 0         # orange
+swift run g13ctl keys                       # watch keys and joystick
+swift run g13ctl clear                      # clear the display
+```
+
+Image options: `--fit` (default), `--fill`, `--stretch`, `--threshold 128`
+instead of dithering, `--invert` to light up dark instead of light parts,
+`--invert-display` to invert the finished frame, `--once` to play a GIF only
+once.
+
+If macOS refuses access, allow your terminal under **System Settings > Privacy
+& Security > Input Monitoring** and run the command again.
+
+## For developers
 
 ```sh
 swift build
 swift test
 ```
 
-## Menüleisten-App
+| Path | Contents |
+| --- | --- |
+| `Sources/G13Kit/LCD` | `LCDFrame` (160x43 framebuffer, 992-byte report), 5x7 font, grayscale to 1 bit (threshold or Floyd-Steinberg), `ImageLoader` for PNG/JPEG/GIF |
+| `Sources/G13Kit/Profiles` | `G13Profile`/`ProfileLibrary` (JSON), `KeyCombo` and `KeyCodes` (shortcuts), `BindingEngine` (keys → actions), `ProfileRenderer` |
+| `Sources/G13Kit/Input` | `KeyInjector`: sends key presses and text to macOS via CGEvent |
+| `Sources/G13Kit/Artwork`, `Sources/G13Kit/Resources` | Picture of the G13 (`g13.svg`) and the clickable key areas (`g13-keys.svg`) |
+| `Sources/G13Kit/Device` | `G13Device` (IOKit HID: find, send LCD frames, backlight, M LEDs, read keys), `G13InputReport` |
+| `Sources/G13App` | Menu bar app (SwiftUI) |
+| `Sources/g13ctl` | Command line tool |
+| `Tests/G13KitTests` | Unit tests |
 
-```sh
-scripts/build-app.sh          # baut build/G13forever.app
-open build/G13forever.app
-```
+Hardware notes:
 
-Zum schnellen Testen geht auch `swift run G13App`, dann gelten die
-Freigaben aber für das Terminal statt für die App.
+- `g13ctl info` reports an output report of 992 bytes, exactly one LCD frame.
+- Set pixels light up. Images are converted so that their light parts light up.
+- The USB "init" control transfer used by the Linux drivers is not needed on
+  macOS: frames sent as HID output report 0x03 arrive directly.
 
-Oben in der Menüleiste erscheint ein Tastatur-Symbol. Dort wählt man das
-aktive Profil, öffnet **Profile bearbeiten …** und kann den Autostart
-einschalten. Pro Profil lassen sich einstellen:
+## License and credits
 
-- **Name und Hintergrundfarbe** der G13
-- **Bild oder GIF** fürs Display, mit Vorschau, Skalierung, Dithering oder
-  Schwellwert und Invertieren. Ohne Bild steht der Profilname auf dem Display.
-- **Joystick**: aus, Pfeiltasten oder W/A/S/D
-- **Tastenbelegung** für G1–G22, die Daumentasten, den Stick, BD, L1–L4 und
-  M1–M3/MR: Tastenkürzel (z. B. `cmd+shift+4`, `f5`, `space` oder per
-  „Aufnehmen“), Text tippen, zu einem Profil wechseln, nächstes/vorheriges Profil.
-  Tastenkürzel bleiben gedrückt, solange die G13-Taste gedrückt ist, das passt
-  auch für Spiele. Die Taste wählt man im Bild der G13 per Klick oder durch
-  Drücken auf der G13, ihre Einstellungen stehen direkt darunter.
-
-M1, M2 und M3 wechseln standardmäßig zu Profil 1, 2 und 3, die passende LED
-leuchtet. Beim Wechsel blendet das Display kurz den Profilnamen ein.
-
-Die Profile liegen in `~/Library/Application Support/G13forever/profiles.json`,
-die Bilder daneben im Ordner `Images`.
-
-### Freigaben
-
-- **Bedienungshilfen** (Systemeinstellungen > Datenschutz & Sicherheit):
-  nötig, damit die App Tastendrücke senden darf. Die App fragt beim ersten
-  Start danach.
-- **Eingabeüberwachung**: nur falls macOS den Zugriff auf die G13 verweigert.
-
-Weil `build-app.sh` ad-hoc signiert, will macOS die Freigabe nach jedem neuen
-Build eventuell erneut. Mit einem eigenen Zertifikat bleibt sie erhalten:
-`SIGN_IDENTITY="Apple Development: …" scripts/build-app.sh`.
-
-## Ausprobieren mit g13ctl
-
-Ohne G13 (nur Vorschau im Terminal):
-
-```sh
-swift run g13ctl preview --pattern
-swift run g13ctl preview --text "Hallo G13"
-swift run g13ctl preview ~/Bilder/logo.png --fill
-```
-
-Mit angeschlossener G13:
-
-```sh
-swift run g13ctl info                       # wird die G13 gefunden?
-swift run g13ctl pattern                    # Testbild: Rahmen, Ecke oben links, Schachbrett
-swift run g13ctl text "Hallo Hank"
-swift run g13ctl image ~/Bilder/animation.gif
-swift run g13ctl backlight 255 80 0         # Orange
-swift run g13ctl keys                       # Tasten und Joystick mitlesen
-```
-
-Bildoptionen: `--fit` (Standard), `--fill`, `--stretch`, `--threshold 128`
-statt Dithering, `--invert`, wenn dunkle statt helle Bildteile leuchten sollen,
-`--invert-display` kehrt den fertigen Frame um, `--once` spielt ein GIF nur
-einmal ab.
-
-Grafiken in genau 160x43 Pixeln sehen am besten aus.
-
-### Falls der Zugriff verweigert wird (g13ctl)
-
-macOS kann den Zugriff auf HID-Geräte blockieren. Dann unter
-**Systemeinstellungen > Datenschutz & Sicherheit > Eingabeüberwachung** das
-Terminal (bzw. später die App) erlauben und den Befehl erneut starten.
-
-## Hardware-Erkenntnisse
-
-- `g13ctl info` meldet einen Output-Report von 992 Byte, genau ein LCD-Frame.
-- Gesetzte Pixel leuchten hell. Bilder werden deshalb so umgesetzt, dass helle
-  Bildteile leuchten (wie auf einem Bildschirm).
-- Der USB-"init"-Control-Transfer der Linux-Treiber ist auf macOS nicht nötig:
-  Frames per HID-Output-Report 0x03 kommen direkt an.
-
-## Herkunft und Lizenzen
-
-MIT-Lizenz, siehe `LICENSE`. Teile basieren auf
-[golgote/G13](https://github.com/golgote/G13) und
+The code is under the MIT license, see [LICENSE](LICENSE). Parts are based on
+[golgote/G13](https://github.com/golgote/G13) and
 [jonas-werner/g13-configurator](https://github.com/jonas-werner/g13-configurator)
-(beide MIT), Details in `THIRD_PARTY_NOTICES.md`. Code aus GPL-Projekten wird
-nicht übernommen.
+(both MIT), details in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). No code
+from GPL projects is used.
+
+This is a hobby project and not affiliated with Logitech.
