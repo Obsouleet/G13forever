@@ -11,7 +11,7 @@ let package = Package(
     ],
     targets: [
         // Gerätekern: LCD, Bilder, USB/HID-Zugriff, Profile und Tastenbelegung.
-        .target(name: "G13Kit"),
+        .target(name: "G13Kit", resources: [.copy("Resources/g13.svg"), .copy("Resources/g13-keys.svg")]),
         // Kommandozeilen-Werkzeug für den Display-Prototyp.
         .executableTarget(name: "g13ctl", dependencies: ["G13Kit"]),
         // Menüleisten-App mit Profilen. Als .app bündeln: scripts/build-app.sh

@@ -1,5 +1,5 @@
 // BindingEditor.swift
-// Eine Zeile der Tastenbelegung und das Eingabefeld für Tastenkürzel.
+// Die Belegung einer Taste und das Eingabefeld für Tastenkürzel.
 
 import AppKit
 import SwiftUI
@@ -56,28 +56,32 @@ extension G13Key {
     }
 }
 
-struct BindingRow: View {
+/// Die Einstellungen der im Bild gewählten Taste.
+struct KeyEditor: View {
     let key: G13Key
     @Binding var action: KeyAction?
     let profileNames: [String]
-    let highlighted: Bool
 
     var body: some View {
-        HStack(spacing: 12) {
-            Text(key.label)
-                .fontWeight(highlighted ? .bold : .regular)
-                .frame(width: 150, alignment: .leading)
-            Picker("", selection: kindBinding) {
-                ForEach(ActionKind.allCases) { Text($0.title).tag($0) }
+        VStack(alignment: .leading, spacing: 10) {
+            Text(key.label).font(.headline)
+            HStack(spacing: 12) {
+                Picker("Aktion", selection: kindBinding) {
+                    ForEach(ActionKind.allCases) { Text($0.title).tag($0) }
+                }
+                .labelsHidden()
+                .frame(width: 160)
+                editor
+                Spacer(minLength: 0)
             }
-            .labelsHidden()
-            .frame(width: 160)
-            editor
-            Spacer(minLength: 0)
+            .frame(minHeight: 28)
+            Text("Taste im Bild anklicken oder auf der G13 drücken. Tastenkürzel werden gehalten, solange die G13-Taste gedrückt ist.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.vertical, 2)
-        .padding(.horizontal, 4)
-        .background(highlighted ? Color.accentColor.opacity(0.18) : Color.clear, in: RoundedRectangle(cornerRadius: 4))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
     }
 
     @ViewBuilder private var editor: some View {

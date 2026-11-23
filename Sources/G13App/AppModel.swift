@@ -6,6 +6,12 @@ import Combine
 import G13Kit
 import ServiceManagement
 
+/// Ein Tastendruck auf der G13. Die laufende Nummer unterscheidet wiederholtes Drücken derselben Taste.
+struct G13KeyPress: Equatable {
+    let key: G13Key
+    let number: Int
+}
+
 @MainActor
 final class AppModel: ObservableObject {
 
@@ -15,8 +21,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var isConnected = false
     @Published private(set) var statusText = "Suche G13 …"
     @Published private(set) var canSendKeys = KeyInjector.canSendKeys
-    /// Zuletzt auf der G13 gedrückte Taste, damit der Editor sie hervorheben kann.
-    @Published private(set) var lastPressedKey: G13Key?
+    /// Letzter Tastendruck auf der G13, damit der Editor die Taste auswählen kann.
+    @Published private(set) var lastKeyPress: G13KeyPress?
     @Published private(set) var launchAtLogin = SMAppService.mainApp.status == .enabled
 
     let store: ProfileStore
@@ -128,7 +134,7 @@ final class AppModel: ObservableObject {
 
     private func handle(_ report: G13InputReport) {
         if let key = report.changes(since: lastReport).pressed.min(by: { $0.bitIndex < $1.bitIndex }) {
-            lastPressedKey = key
+            lastKeyPress = G13KeyPress(key: key, number: (lastKeyPress?.number ?? 0) + 1)
         }
         lastReport = report
         for output in engine.handle(report) {

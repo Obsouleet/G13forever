@@ -1,5 +1,6 @@
 // SettingsView.swift
-// Fenster zum Bearbeiten der Profile: Name, Farbe, Bild/GIF, Joystick, Tasten.
+// Fenster zum Bearbeiten der Profile: Name, Farbe, Bild/GIF, Joystick
+// und die Tastenbelegung am Bild der G13.
 
 import AppKit
 import SwiftUI
@@ -84,97 +85,116 @@ struct SettingsView: View {
 struct ProfileEditor: View {
     @EnvironmentObject private var model: AppModel
     @Binding var profile: G13Profile
+    /// Die im Bild gewählte Taste.
+    @State private var selectedKey: G13Key = .g1
 
     private var slot: Int? { model.library.index(of: profile.id).map { $0 + 1 } }
 
     var body: some View {
-        ScrollViewReader { proxy in
-            Form {
-                Section {
-                    TextField("Name", text: $profile.name)
-                    ColorPicker("Hintergrundfarbe", selection: colorBinding, supportsOpacity: false)
-                    HStack {
-                        if model.library.activeProfileID == profile.id {
-                            Label("Aktives Profil", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
-                        } else {
-                            Button("Jetzt aktivieren") { model.activate(profile.id) }
-                        }
-                        Spacer()
-                        if let slot, slot <= 3 {
-                            Text("Taste M\(slot) wechselt hierher").foregroundStyle(.secondary)
-                        }
-                    }
-                } header: {
-                    Text("Profil")
-                }
-
-                Section {
-                    LCDAnimationView(frames: model.frames(for: profile))
-                        .frame(maxWidth: 520)
-                        .frame(maxWidth: .infinity)
-                    HStack {
-                        Button("Bild oder GIF wählen …", action: chooseImage)
-                        if profile.display.imageFile != nil {
-                            Button("Bild entfernen") { model.removeImage(for: profile.id) }
-                        }
-                        Spacer()
-                        Text(profile.display.imageFile == nil ? "Ohne Bild steht der Profilname auf dem Display." : "Am schärfsten: genau 160 × 43 Pixel.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    Picker("Skalierung", selection: $profile.display.scale) {
-                        Text("Einpassen").tag(ScaleMode.fit)
-                        Text("Füllen").tag(ScaleMode.fill)
-                        Text("Strecken").tag(ScaleMode.stretch)
-                    }
-                    .pickerStyle(.segmented)
-                    Toggle("Dithering (gut für Fotos und Verläufe)", isOn: $profile.display.dither)
-                    if !profile.display.dither {
-                        HStack {
-                            Text("Schwellwert")
-                            Slider(value: thresholdBinding, in: 0...255)
-                            Text("\(profile.display.threshold)").monospacedDigit().frame(width: 32, alignment: .trailing)
-                        }
-                    }
-                    Toggle("Invertieren (dunkle Bildteile leuchten)", isOn: $profile.display.invert)
-                } header: {
-                    Text("Display")
-                }
-
-                Section {
-                    Picker("Joystick", selection: $profile.joystick) {
-                        Text("Aus").tag(JoystickMode.off)
-                        Text("Pfeiltasten").tag(JoystickMode.arrows)
-                        Text("W A S D").tag(JoystickMode.wasd)
-                    }
-                } header: {
-                    Text("Joystick")
-                }
-
-                Section {
-                    ForEach(G13Profile.bindableKeys, id: \.self) { key in
-                        BindingRow(
-                            key: key,
-                            action: $profile.bindings[key],
-                            profileNames: model.library.profiles.map(\.name),
-                            highlighted: model.lastPressedKey == key
-                        )
-                        .id(key)
-                    }
-                } header: {
-                    Text("Tastenbelegung")
-                } footer: {
-                    Text("Tipp: Eine Taste auf der G13 drücken, dann springt die Liste zu ihr. Tastenkürzel werden gehalten, solange die G13-Taste gedrückt ist.")
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .formStyle(.grouped)
-            .onChange(of: model.lastPressedKey) { _, key in
-                guard let key, G13Profile.bindableKeys.contains(key) else { return }
-                withAnimation { proxy.scrollTo(key, anchor: .center) }
+        VStack(spacing: 0) {
+            header
+            Divider()
+            HStack(spacing: 0) {
+                keyRegion
+                    .frame(minWidth: 580, maxWidth: .infinity)
+                Divider()
+                profileRegion
+                    .frame(width: 380)
             }
         }
         .navigationTitle(profile.name)
+        .onChange(of: model.lastKeyPress) { _, press in
+            guard let press, G13Profile.bindableKeys.contains(press.key) else { return }
+            selectedKey = press.key
+        }
+    }
+
+    // MARK: Kopf
+
+    private var header: some View {
+        HStack(spacing: 16) {
+            TextField("Profilname", text: $profile.name)
+                .textFieldStyle(.plain)
+                .font(.title.weight(.semibold))
+            if let slot, slot <= 3 {
+                Text("Taste M\(slot) wechselt hierher")
+                    .foregroundStyle(.secondary)
+                    .fixedSize()
+            }
+            if model.library.activeProfileID == profile.id {
+                Label("Aktives Profil", systemImage: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+                    .fixedSize()
+            } else {
+                Button("Jetzt aktivieren") { model.activate(profile.id) }
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+    }
+
+    // MARK: Links: G13 und gewählte Taste
+
+    private var keyRegion: some View {
+        VStack(spacing: 0) {
+            G13PictureView(profile: profile, frames: model.frames(for: profile), selection: $selectedKey)
+                .padding(16)
+            Divider()
+            KeyEditor(
+                key: selectedKey,
+                action: $profile.bindings[selectedKey],
+                profileNames: model.library.profiles.map(\.name)
+            )
+            // Pro Taste ein eigener Editor, sonst liefe eine Aufnahme in der nächsten Taste weiter.
+            .id(selectedKey)
+        }
+    }
+
+    // MARK: Rechts: Profileinstellungen
+
+    private var profileRegion: some View {
+        Form {
+            Section("Profil") {
+                ColorPicker("Hintergrundfarbe", selection: colorBinding, supportsOpacity: false)
+            }
+
+            Section("Display") {
+                LCDAnimationView(frames: model.frames(for: profile))
+                    .frame(maxWidth: .infinity)
+                HStack {
+                    Button("Bild oder GIF wählen …", action: chooseImage)
+                    if profile.display.imageFile != nil {
+                        Button("Entfernen") { model.removeImage(for: profile.id) }
+                    }
+                }
+                Text(profile.display.imageFile == nil ? "Ohne Bild steht der Profilname auf dem Display." : "Am schärfsten: genau 160 × 43 Pixel.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Picker("Skalierung", selection: $profile.display.scale) {
+                    Text("Einpassen").tag(ScaleMode.fit)
+                    Text("Füllen").tag(ScaleMode.fill)
+                    Text("Strecken").tag(ScaleMode.stretch)
+                }
+                Toggle("Dithering (gut für Fotos und Verläufe)", isOn: $profile.display.dither)
+                if !profile.display.dither {
+                    HStack {
+                        Text("Schwellwert")
+                        Slider(value: thresholdBinding, in: 0...255)
+                        Text("\(profile.display.threshold)").monospacedDigit().frame(width: 32, alignment: .trailing)
+                    }
+                }
+                Toggle("Invertieren (dunkle Bildteile leuchten)", isOn: $profile.display.invert)
+            }
+
+            Section("Joystick") {
+                Picker("Joystick", selection: $profile.joystick) {
+                    Text("Aus").tag(JoystickMode.off)
+                    Text("Pfeiltasten").tag(JoystickMode.arrows)
+                    Text("W A S D").tag(JoystickMode.wasd)
+                }
+            }
+        }
+        .formStyle(.grouped)
     }
 
     private var colorBinding: Binding<Color> {
