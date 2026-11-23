@@ -9,6 +9,8 @@ public struct G13Artwork {
     /// Sichtbarer Ausschnitt in SVG-Koordinaten (Ursprung oben links). Auch die Flächen liegen darin.
     public let viewBox: CGRect
     public let zones: [G13Key: CGPath]
+    /// Wo der Belegt-Punkt sitzt, bei Tasten ohne Namen (Kreise mit id "LEFT-dot" usw.).
+    public let dots: [G13Key: CGPoint]
     /// Wo das Display sitzt (Element mit id "LCD").
     public let lcd: CGRect?
 
@@ -32,6 +34,7 @@ public struct G13Artwork {
         guard parser.parse(), let viewBox = reader.viewBox else { return nil }
         self.viewBox = viewBox
         zones = reader.zones
+        dots = reader.dots
         lcd = reader.lcd
     }
 
@@ -58,6 +61,7 @@ public struct G13Artwork {
     private final class Reader: NSObject, XMLParserDelegate {
         var viewBox: CGRect?
         var zones: [G13Key: CGPath] = [:]
+        var dots: [G13Key: CGPoint] = [:]
         var lcd: CGRect?
 
         func parser(_ parser: XMLParser, didStartElement element: String, namespaceURI: String?,
@@ -93,6 +97,9 @@ public struct G13Artwork {
                 return
             }
             if let key = G13Key(rawValue: id) { zones[key] = path }
+            if element == "circle", id.hasSuffix("-dot"), let key = G13Key(rawValue: String(id.dropLast(4))) {
+                dots[key] = CGPoint(x: number("cx"), y: number("cy"))
+            }
         }
     }
 }

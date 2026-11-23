@@ -18,6 +18,14 @@ final class ArtworkTests: XCTestCase {
         }
     }
 
+    func testUnnamedKeysHaveADotInsideTheirZone() throws {
+        let art = G13Artwork.standard
+        XCTAssertEqual(Set(art.dots.keys), [.left, .right, .stick])
+        for (key, dot) in art.dots {
+            XCTAssertTrue(try XCTUnwrap(art.zones[key]).contains(dot), "\(key)")
+        }
+    }
+
     func testImageAndLCDArePresent() throws {
         XCTAssertFalse(G13Artwork.imageData.isEmpty)
         let lcd = try XCTUnwrap(G13Artwork.standard.lcd)

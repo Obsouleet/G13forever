@@ -1,5 +1,5 @@
 // G13PictureView.swift
-// Die G13 als Bild. Jede Taste lässt sich anklicken und zeigt, womit sie belegt ist.
+// Die G13 als Bild. Jede Taste lässt sich anklicken, belegte Tasten sind grün gekennzeichnet.
 
 import AppKit
 import SwiftUI
@@ -41,6 +41,7 @@ struct G13PictureView: View {
                             key: key,
                             action: profile.bindings[key],
                             path: Path(path).applying(transform),
+                            dot: art.dots[key]?.applying(transform),
                             scale: scale,
                             isSelected: selection == key
                         ) { selection = key }
@@ -82,6 +83,8 @@ private struct KeyZone: View {
     let key: G13Key
     let action: KeyAction?
     let path: Path
+    /// Wo der Punkt sitzt, bei Tasten ohne Namen.
+    let dot: CGPoint?
     let scale: CGFloat
     let isSelected: Bool
     let select: () -> Void
@@ -115,45 +118,28 @@ private struct KeyZone: View {
         return Color.white.opacity(0.001)
     }
 
-    /// Auf den großen Tasten Name und Belegung, auf den kleinen nur der Name.
+    /// Der Tastenname, grün wenn belegt. Tasten ohne Namen zeigen dann einen grünen Punkt.
     @ViewBuilder private var caption: some View {
-        switch key {
-        case .left, .right, .stick:
-            EmptyView()
-        case .bd, .l1, .l2, .l3, .l4, .m1, .m2, .m3, .mr:
-            Text(key.rawValue)
-                .font(.system(size: 6 * scale, weight: .semibold))
-                .foregroundStyle(.white.opacity(action == nil ? 0.6 : 1))
-        default:
-            VStack(spacing: 0) {
-                Text(key.rawValue)
-                    .font(.system(size: 6 * scale, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.6))
-                if let action {
-                    Text(action.shortLabel)
-                        .font(.system(size: 8.5 * scale, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
-                }
+        if let dot {
+            if action != nil {
+                let box = path.boundingRect
+                Circle()
+                    .fill(Self.assignedColor)
+                    .overlay { Circle().stroke(.black.opacity(0.6), lineWidth: 0.5 * scale) }
+                    .frame(width: 7 * scale, height: 7 * scale)
+                    .position(x: dot.x - box.minX, y: dot.y - box.minY)
             }
-            .padding(.horizontal, 2 * scale)
+        } else {
+            Text(key.rawValue)
+                .font(.system(size: 7 * scale, weight: .semibold))
+                .foregroundStyle(action == nil ? .white.opacity(0.75) : Self.assignedColor)
         }
     }
+
+    private static let assignedColor = Color(red: 0.3, green: 0.9, blue: 0.4)
 }
 
 extension KeyAction {
-    /// Kurzform für die Taste im Bild.
-    var shortLabel: String {
-        switch self {
-        case .keys(let combo): return combo.displayString
-        case .text(let text): return text.isEmpty ? "Text" : "„\(text)“"
-        case .profileSlot(let slot): return "Profil \(slot)"
-        case .nextProfile: return "Profil ▸"
-        case .previousProfile: return "◂ Profil"
-        }
-    }
-
     /// Ausgeschrieben für Tooltip und Bedienungshilfen.
     var summary: String {
         switch self {
