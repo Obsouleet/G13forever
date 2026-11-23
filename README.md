@@ -160,7 +160,8 @@ sides, and add the language to `CFBundleLocalizations` in `Resources/Info.plist`
 Translations only apply to the app built with `scripts/build-app.sh`; `swift run`
 and `g13ctl` are always in English.
 
-To publish a release, push a tag such as `v1.2.3`. GitHub Actions runs the
+To publish a release, push a tag such as `v1.2.3` or create it with a new
+release on the website. GitHub Actions runs the
 tests, builds the app for Apple silicon and Intel, and attaches `G13forever.zip`
 to the release ([release.yml](.github/workflows/release.yml)). The version
 number comes from the tag. To build the same ZIP locally:

@@ -1,10 +1,16 @@
-# Ein Tag wie v1.2.3 baut die App für Apple silicon und Intel (ad-hoc signiert)
-# und hängt sie als G13forever.zip an das GitHub Release dieses Tags.
+# Ein Versions-Tag (v1.2.3, v1.2 oder ohne v) baut die App für Apple silicon und
+# Intel (ad-hoc signiert) und hängt sie als G13forever.zip an das Release dieses Tags.
+# Für ein schon vorhandenes Tag: auf der Actions-Seite "Run workflow".
 name: Release
 
 on:
   push:
-    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+    tags: ['v[0-9]*', '[0-9]*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Vorhandenes Tag, z. B. v1.2.3
+        required: true
 
 permissions:
   contents: write
@@ -15,9 +21,17 @@ jobs:
     timeout-minutes: 30
     env:
       GH_TOKEN: ${{ github.token }}
-      TAG: ${{ github.ref_name }}
+      TAG: ${{ inputs.tag || github.ref_name }}
     steps:
+      - name: Tag prüfen
+        run: |
+          if [[ ! "$TAG" =~ ^v?[0-9]+(\.[0-9]+){1,2}$ ]]; then
+            echo "::error::$TAG ist keine Versionsnummer wie v1.2.3"
+            exit 1
+          fi
       - uses: actions/checkout@v7
+        with:
+          ref: refs/tags/${{ env.TAG }}
       - name: Tests
         run: swift test
       - name: App bauen und packen
