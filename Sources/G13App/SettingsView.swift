@@ -12,6 +12,8 @@ struct SettingsView: View {
 
     @EnvironmentObject private var model: AppModel
     @State private var selection: UUID?
+    /// Profil, dessen Namensfeld den Fokus bekommen soll.
+    @State private var renaming: UUID?
 
     var body: some View {
         NavigationSplitView {
@@ -21,20 +23,29 @@ struct SettingsView: View {
                         Circle()
                             .fill(profile.backlight.color)
                             .frame(width: 10, height: 10)
-                        Text(profile.name)
+                        Text(profile.name.isEmpty ? "Ohne Namen" : profile.name)
+                            .foregroundStyle(profile.name.isEmpty ? .secondary : .primary)
                         Spacer()
                         if model.library.activeProfileID == profile.id {
                             Image(systemName: "checkmark").foregroundStyle(.secondary)
                         }
                     }
                     .tag(profile.id)
+                    .contextMenu {
+                        Button("Umbenennen") { selection = profile.id; renaming = profile.id }
+                        Button("Duplizieren") { model.duplicateProfile(profile.id) }
+                    }
                 }
                 .onMove { model.moveProfiles(from: $0, to: $1) }
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 220)
             .safeAreaInset(edge: .bottom) {
                 HStack(spacing: 4) {
-                    Button { model.addProfile(); selection = model.library.profiles.last?.id } label: {
+                    Button {
+                        model.addProfile()
+                        selection = model.library.profiles.last?.id
+                        renaming = selection
+                    } label: {
                         Image(systemName: "plus")
                     }
                     .help("Neues Profil")
@@ -58,7 +69,7 @@ struct SettingsView: View {
             }
         } detail: {
             if let id = selection, let binding = profileBinding(id) {
-                ProfileEditor(profile: binding)
+                ProfileEditor(profile: binding, renaming: $renaming)
                     .id(id)
             } else {
                 Text("Profil auswählen").foregroundStyle(.secondary)
@@ -85,6 +96,8 @@ struct SettingsView: View {
 struct ProfileEditor: View {
     @EnvironmentObject private var model: AppModel
     @Binding var profile: G13Profile
+    @Binding var renaming: UUID?
+    @FocusState private var nameIsFocused: Bool
     /// Die im Bild gewählte Taste.
     @State private var selectedKey: G13Key = .g1
 
@@ -102,7 +115,14 @@ struct ProfileEditor: View {
                     .frame(width: 380)
             }
         }
-        .navigationTitle(profile.name)
+        .onChange(of: renaming, initial: true) { _, id in
+            guard id == profile.id else { return }
+            // Erst nach dem Aufbau fokussieren, sonst greift es bei neuen Profilen nicht.
+            DispatchQueue.main.async {
+                nameIsFocused = true
+                renaming = nil
+            }
+        }
         .onChange(of: model.lastKeyPress) { _, press in
             guard let press, G13Profile.bindableKeys.contains(press.key) else { return }
             selectedKey = press.key
@@ -115,7 +135,25 @@ struct ProfileEditor: View {
         HStack(spacing: 16) {
             TextField("Profilname", text: $profile.name)
                 .textFieldStyle(.plain)
-                .font(.title.weight(.semibold))
+                .font(.title2.weight(.semibold))
+                .focused($nameIsFocused)
+                .onSubmit { nameIsFocused = false }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: 7))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 7)
+                        .strokeBorder(nameIsFocused ? Color.accentColor : Color(nsColor: .separatorColor), lineWidth: nameIsFocused ? 2 : 1)
+                }
+                .overlay(alignment: .trailing) {
+                    Image(systemName: "pencil")
+                        .foregroundStyle(.secondary)
+                        .padding(.trailing, 10)
+                        .allowsHitTesting(false)
+                }
+                .frame(maxWidth: 360)
+                .help("Profilname ändern")
+            Spacer()
             if let slot, slot <= 3 {
                 Text("Taste M\(slot) wechselt hierher")
                     .foregroundStyle(.secondary)

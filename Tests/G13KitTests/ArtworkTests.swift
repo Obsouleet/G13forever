@@ -34,6 +34,17 @@ final class ArtworkTests: XCTestCase {
         XCTAssertEqual(art.lcd, CGRect(x: 1, y: 1, width: 4, height: 1))
     }
 
+    func testRoundedPolygonCutsCornersButKeepsEdges() {
+        let square = [CGPoint(x: 0, y: 0), CGPoint(x: 20, y: 0), CGPoint(x: 20, y: 20), CGPoint(x: 0, y: 20)]
+        let path = G13Artwork.roundedPolygon(square, radius: 5)
+        XCTAssertFalse(path.contains(CGPoint(x: 0.5, y: 0.5)))
+        XCTAssertTrue(path.contains(CGPoint(x: 10, y: 0.5)))
+        XCTAssertEqual(path.boundingBoxOfPath, CGRect(x: 0, y: 0, width: 20, height: 20))
+        // Zu großer Radius wird auf die halbe Kante begrenzt, es bleibt ein Kreis.
+        let circle = G13Artwork.roundedPolygon(square, radius: 100)
+        XCTAssertEqual(circle.boundingBoxOfPath.width, 20, accuracy: 0.01)
+    }
+
     func testRejectsBrokenSVG() {
         XCTAssertNil(G13Artwork(svg: Data("kaputt".utf8)))
         XCTAssertNil(G13Artwork(svg: Data("<svg></svg>".utf8)))

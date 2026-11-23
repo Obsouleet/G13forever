@@ -35,6 +35,26 @@ public struct G13Artwork {
         lcd = reader.lcd
     }
 
+    /// Vieleck mit runden Ecken. An kurzen Kanten und spitzen Ecken wird der Radius kleiner.
+    static func roundedPolygon(_ points: [CGPoint], radius: CGFloat) -> CGPath {
+        func distance(_ a: CGPoint, _ b: CGPoint) -> CGFloat { hypot(a.x - b.x, a.y - b.y) }
+        let count = points.count
+        let path = CGMutablePath()
+        let last = points[count - 1], first = points[0]
+        path.move(to: CGPoint(x: (last.x + first.x) / 2, y: (last.y + first.y) / 2))
+        for index in 0..<count {
+            let previous = points[(index + count - 1) % count], corner = points[index], next = points[(index + 1) % count]
+            let a = distance(previous, corner), b = distance(corner, next)
+            let dot = (previous.x - corner.x) * (next.x - corner.x) + (previous.y - corner.y) * (next.y - corner.y)
+            let angle = acos(max(-1, min(1, dot / max(a * b, .ulpOfOne))))
+            // Die Rundung darf höchstens die halbe Kante verbrauchen.
+            let fitting = min(a, b) / 2 * tan(angle / 2)
+            path.addArc(tangent1End: corner, tangent2End: next, radius: min(radius, fitting))
+        }
+        path.closeSubpath()
+        return path
+    }
+
     private final class Reader: NSObject, XMLParserDelegate {
         var viewBox: CGRect?
         var zones: [G13Key: CGPath] = [:]
@@ -66,10 +86,9 @@ public struct G13Artwork {
             case "polygon":
                 let values = numbers("points")
                 guard values.count >= 6, values.count.isMultiple(of: 2) else { return }
-                let polygon = CGMutablePath()
-                polygon.addLines(between: stride(from: 0, to: values.count, by: 2).map { CGPoint(x: values[$0], y: values[$0 + 1]) })
-                polygon.closeSubpath()
-                path = polygon
+                path = G13Artwork.roundedPolygon(
+                    stride(from: 0, to: values.count, by: 2).map { CGPoint(x: values[$0], y: values[$0 + 1]) },
+                    radius: number("rx"))
             default:
                 return
             }

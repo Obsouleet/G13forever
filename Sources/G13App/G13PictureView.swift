@@ -95,7 +95,7 @@ private struct KeyZone: View {
         Button(action: select) {
             shape
                 .fill(fill)
-                .overlay { shape.stroke(isSelected ? Color.accentColor : .clear, lineWidth: 2.5) }
+                .overlay { shape.stroke(isSelected ? Color.accentColor : .clear, style: StrokeStyle(lineWidth: 2.5, lineJoin: .round)) }
                 .overlay { caption }
                 .contentShape(shape)
         }
