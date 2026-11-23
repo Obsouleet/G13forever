@@ -1,0 +1,102 @@
+// Deutsche Übersetzung. Links steht der englische Text aus dem Code.
+// %@ steht für Text, %lld für Zahlen. Fehlt ein Eintrag, erscheint der englische Text.
+
+// Menü
+"Allow Key Presses (Accessibility)…" = "Tastendrücke erlauben (Bedienungshilfen) …";
+"Edit Profiles…" = "Profile bearbeiten …";
+"Launch at Login" = "Bei Anmeldung starten";
+"Quit G13forever" = "G13forever beenden";
+
+// Status
+"Looking for G13…" = "Suche G13 …";
+"G13 connected" = "G13 verbunden";
+"G13 not found" = "G13 nicht gefunden";
+"G13 unplugged" = "G13 abgezogen";
+"Connection to the G13 lost" = "Verbindung zur G13 verloren";
+"profiles.json could not be read and was renamed to %@." = "profiles.json war nicht lesbar und liegt jetzt als %@ daneben.";
+"The image could not be added: %@" = "Bild konnte nicht übernommen werden: %@";
+"Saving failed: %@" = "Speichern fehlgeschlagen: %@";
+"Launch at login only works from the built app (G13forever.app): %@" = "Autostart geht nur aus der gebauten App (G13forever.app): %@";
+
+// Profile
+"G13 Profiles" = "G13 Profile";
+"Profile" = "Profil";
+"Profile %lld" = "Profil %lld";
+"%@ copy" = "%@ Kopie";
+"Untitled" = "Ohne Namen";
+"Rename" = "Umbenennen";
+"Duplicate" = "Duplizieren";
+"New Profile" = "Neues Profil";
+"Duplicate Profile" = "Profil duplizieren";
+"Delete Profile" = "Profil löschen";
+"Select a Profile" = "Profil auswählen";
+"Profile name" = "Profilname";
+"Change profile name" = "Profilname ändern";
+"Key M%lld switches here" = "Taste M%lld wechselt hierher";
+"Active Profile" = "Aktives Profil";
+"Activate Now" = "Jetzt aktivieren";
+"Backlight color" = "Hintergrundfarbe";
+
+// Display
+"Display" = "Display";
+"Choose Image or GIF…" = "Bild oder GIF wählen …";
+"Choose an image or GIF for the G13 display" = "Bild oder GIF für das G13-Display wählen";
+"Remove" = "Entfernen";
+"Without an image, the display shows the profile name." = "Ohne Bild steht der Profilname auf dem Display.";
+"Sharpest: exactly 160 × 43 pixels." = "Am schärfsten: genau 160 × 43 Pixel.";
+"Scaling" = "Skalierung";
+"Fit" = "Einpassen";
+"Fill" = "Füllen";
+"Stretch" = "Strecken";
+"Dithering (good for photos and gradients)" = "Dithering (gut für Fotos und Verläufe)";
+"Threshold" = "Schwellwert";
+"Invert (dark parts light up)" = "Invertieren (dunkle Bildteile leuchten)";
+"G13forever closed" = "G13forever beendet";
+
+// Joystick
+"Joystick" = "Joystick";
+"Off" = "Aus";
+"Arrow keys" = "Pfeiltasten";
+"W A S D" = "W A S D";
+
+// Tastenbelegung
+"Action" = "Aktion";
+"Nothing" = "Nichts";
+"Keyboard shortcut" = "Tastenkürzel";
+"Type text" = "Text tippen";
+"Switch profile" = "Profil wechseln";
+"Next profile" = "Nächstes Profil";
+"Previous profile" = "Vorheriges Profil";
+"Text “%@”" = "Text „%@“";
+"not assigned" = "nicht belegt";
+"%lld: (missing)" = "%lld: (fehlt)";
+"Text to type" = "Text, der getippt wird";
+"e.g. cmd+shift+4" = "z. B. cmd+shift+4";
+"Record" = "Aufnehmen";
+"Press a key…" = "Taste drücken …";
+"Click a key in the picture or press it on the G13. Shortcuts stay pressed as long as you hold the G13 key." = "Taste im Bild anklicken oder auf der G13 drücken. Tastenkürzel werden gehalten, solange die G13-Taste gedrückt ist.";
+
+// Tastennamen
+"Left thumb key" = "Daumentaste links";
+"Lower thumb key" = "Daumentaste unten";
+"Press stick" = "Stick drücken";
+"BD (below display)" = "BD (unter Display)";
+"%@ (below display)" = "%@ (unter Display)";
+"Space" = "Leertaste";
+"Keypad %@" = "Ziffernblock %@";
+"right ⌘" = "⌘ rechts";
+"right ⇧" = "⇧ rechts";
+"right ⌥" = "⌥ rechts";
+"right ⌃" = "⌃ rechts";
+
+// Fehler
+"The HID manager could not be opened (%@)." = "HID-Manager konnte nicht geöffnet werden (%@).";
+"macOS denies access: allow the app or your terminal under System Settings > Privacy & Security > Input Monitoring." = "macOS verweigert den Zugriff: Systemeinstellungen > Datenschutz & Sicherheit > Eingabeüberwachung, dort das Terminal bzw. die App erlauben.";
+"No Logitech G13 found (USB 046d:c21c). Is it plugged in?" = "Keine Logitech G13 gefunden (USB 046d:c21c). Ist sie eingesteckt?";
+"%@ failed (%@)." = "%@ fehlgeschlagen (%@).";
+"Sending the LCD frame" = "LCD-Frame senden";
+"Setting the backlight color" = "Hintergrundfarbe setzen";
+"Setting the M LEDs" = "M-LEDs setzen";
+"The image could not be opened: %@" = "Bild konnte nicht geöffnet werden: %@";
+"The file contains no images: %@" = "Datei enthält keine Bilder: %@";
+"The image could not be converted to grayscale" = "Bild konnte nicht in Graustufen umgerechnet werden";

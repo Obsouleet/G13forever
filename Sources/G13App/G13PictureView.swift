@@ -105,12 +105,14 @@ private struct KeyZone: View {
         .buttonStyle(.plain)
         .frame(width: box.width, height: box.height)
         .onHover { isHovered = $0 }
-        .help("\(key.label): \(action?.summary ?? "nicht belegt")")
+        .help(Text(verbatim: "\(key.label): \(summary)"))
         .accessibilityLabel(key.label)
-        .accessibilityValue(action?.summary ?? "nicht belegt")
+        .accessibilityValue(summary)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .offset(x: box.minX, y: box.minY)
     }
+
+    private var summary: String { action?.summary ?? String(localized: "not assigned") }
 
     private var fill: Color {
         if isSelected { return Color.accentColor.opacity(0.55) }
@@ -144,10 +146,10 @@ extension KeyAction {
     var summary: String {
         switch self {
         case .keys(let combo): return combo.displayString
-        case .text(let text): return "Text „\(text)“"
-        case .profileSlot(let slot): return "Profil \(slot)"
-        case .nextProfile: return "Nächstes Profil"
-        case .previousProfile: return "Vorheriges Profil"
+        case .text(let text): return String(localized: "Text “\(text)”")
+        case .profileSlot(let slot): return String(localized: "Profile \(slot)")
+        case .nextProfile: return String(localized: "Next profile")
+        case .previousProfile: return String(localized: "Previous profile")
         }
     }
 }

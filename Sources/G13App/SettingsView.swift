@@ -23,7 +23,7 @@ struct SettingsView: View {
                         Circle()
                             .fill(profile.backlight.color)
                             .frame(width: 10, height: 10)
-                        Text(profile.name.isEmpty ? "Ohne Namen" : profile.name)
+                        Text(profile.name.isEmpty ? String(localized: "Untitled") : profile.name)
                             .foregroundStyle(profile.name.isEmpty ? .secondary : .primary)
                         Spacer()
                         if model.library.activeProfileID == profile.id {
@@ -32,8 +32,8 @@ struct SettingsView: View {
                     }
                     .tag(profile.id)
                     .contextMenu {
-                        Button("Umbenennen") { selection = profile.id; renaming = profile.id }
-                        Button("Duplizieren") { model.duplicateProfile(profile.id) }
+                        Button("Rename") { selection = profile.id; renaming = profile.id }
+                        Button("Duplicate") { model.duplicateProfile(profile.id) }
                     }
                 }
                 .onMove { model.moveProfiles(from: $0, to: $1) }
@@ -48,11 +48,11 @@ struct SettingsView: View {
                     } label: {
                         Image(systemName: "plus")
                     }
-                    .help("Neues Profil")
+                    .help("New Profile")
                     Button {
                         if let id = selection { model.duplicateProfile(id) }
                     } label: { Image(systemName: "plus.square.on.square") }
-                    .help("Profil duplizieren")
+                    .help("Duplicate Profile")
                     .disabled(selection == nil)
                     Button {
                         if let id = selection {
@@ -60,7 +60,7 @@ struct SettingsView: View {
                             selection = model.library.activeProfileID
                         }
                     } label: { Image(systemName: "minus") }
-                    .help("Profil löschen")
+                    .help("Delete Profile")
                     .disabled(selection == nil || model.library.profiles.count <= 1)
                     Spacer()
                 }
@@ -72,7 +72,7 @@ struct SettingsView: View {
                 ProfileEditor(profile: binding, renaming: $renaming)
                     .id(id)
             } else {
-                Text("Profil auswählen").foregroundStyle(.secondary)
+                Text("Select a Profile").foregroundStyle(.secondary)
             }
         }
         .onAppear {
@@ -133,7 +133,7 @@ struct ProfileEditor: View {
 
     private var header: some View {
         HStack(spacing: 16) {
-            TextField("Profilname", text: $profile.name)
+            TextField("Profile name", text: $profile.name)
                 .textFieldStyle(.plain)
                 .font(.title2.weight(.semibold))
                 .focused($nameIsFocused)
@@ -152,19 +152,19 @@ struct ProfileEditor: View {
                         .allowsHitTesting(false)
                 }
                 .frame(maxWidth: 360)
-                .help("Profilname ändern")
+                .help("Change profile name")
             Spacer()
             if let slot, slot <= 3 {
-                Text("Taste M\(slot) wechselt hierher")
+                Text("Key M\(slot) switches here")
                     .foregroundStyle(.secondary)
                     .fixedSize()
             }
             if model.library.activeProfileID == profile.id {
-                Label("Aktives Profil", systemImage: "checkmark.circle.fill")
+                Label("Active Profile", systemImage: "checkmark.circle.fill")
                     .foregroundStyle(.green)
                     .fixedSize()
             } else {
-                Button("Jetzt aktivieren") { model.activate(profile.id) }
+                Button("Activate Now") { model.activate(profile.id) }
             }
         }
         .padding(.horizontal, 20)
@@ -192,42 +192,42 @@ struct ProfileEditor: View {
 
     private var profileRegion: some View {
         Form {
-            Section("Profil") {
-                ColorPicker("Hintergrundfarbe", selection: colorBinding, supportsOpacity: false)
+            Section("Profile") {
+                ColorPicker("Backlight color", selection: colorBinding, supportsOpacity: false)
             }
 
             Section("Display") {
                 LCDAnimationView(frames: model.frames(for: profile))
                     .frame(maxWidth: .infinity)
                 HStack {
-                    Button("Bild oder GIF wählen …", action: chooseImage)
+                    Button("Choose Image or GIF…", action: chooseImage)
                     if profile.display.imageFile != nil {
-                        Button("Entfernen") { model.removeImage(for: profile.id) }
+                        Button("Remove") { model.removeImage(for: profile.id) }
                     }
                 }
-                Text(profile.display.imageFile == nil ? "Ohne Bild steht der Profilname auf dem Display." : "Am schärfsten: genau 160 × 43 Pixel.")
+                Text(profile.display.imageFile == nil ? "Without an image, the display shows the profile name." : "Sharpest: exactly 160 × 43 pixels.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Picker("Skalierung", selection: $profile.display.scale) {
-                    Text("Einpassen").tag(ScaleMode.fit)
-                    Text("Füllen").tag(ScaleMode.fill)
-                    Text("Strecken").tag(ScaleMode.stretch)
+                Picker("Scaling", selection: $profile.display.scale) {
+                    Text("Fit").tag(ScaleMode.fit)
+                    Text("Fill").tag(ScaleMode.fill)
+                    Text("Stretch").tag(ScaleMode.stretch)
                 }
-                Toggle("Dithering (gut für Fotos und Verläufe)", isOn: $profile.display.dither)
+                Toggle("Dithering (good for photos and gradients)", isOn: $profile.display.dither)
                 if !profile.display.dither {
                     HStack {
-                        Text("Schwellwert")
+                        Text("Threshold")
                         Slider(value: thresholdBinding, in: 0...255)
                         Text("\(profile.display.threshold)").monospacedDigit().frame(width: 32, alignment: .trailing)
                     }
                 }
-                Toggle("Invertieren (dunkle Bildteile leuchten)", isOn: $profile.display.invert)
+                Toggle("Invert (dark parts light up)", isOn: $profile.display.invert)
             }
 
             Section("Joystick") {
                 Picker("Joystick", selection: $profile.joystick) {
-                    Text("Aus").tag(JoystickMode.off)
-                    Text("Pfeiltasten").tag(JoystickMode.arrows)
+                    Text("Off").tag(JoystickMode.off)
+                    Text("Arrow keys").tag(JoystickMode.arrows)
                     Text("W A S D").tag(JoystickMode.wasd)
                 }
             }
@@ -257,7 +257,7 @@ struct ProfileEditor: View {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.png, .jpeg, .gif, .bmp, .tiff, .heic]
         panel.allowsMultipleSelection = false
-        panel.message = "Bild oder GIF für das G13-Display wählen"
+        panel.message = String(localized: "Choose an image or GIF for the G13 display")
         if panel.runModal() == .OK, let url = panel.url {
             model.setImage(url, for: profile.id)
         }

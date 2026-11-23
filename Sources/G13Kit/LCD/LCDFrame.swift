@@ -161,7 +161,7 @@ extension LCDFrame {
         }
         frame.drawText("G13forever", x: 12, y: 3)
         frame.drawText("160x43 Test", x: 12, y: 14)
-        frame.drawText("oben links", x: 12, y: 25)
+        frame.drawText("top left", x: 12, y: 25)
         // Diagonale über die untere Kante als Linearitätstest.
         for i in 0..<110 { frame[6 + i, 41 - (i / 12)] = true }
         return frame

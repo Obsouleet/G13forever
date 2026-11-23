@@ -28,9 +28,9 @@ public enum ImageLoaderError: Error, CustomStringConvertible {
 
     public var description: String {
         switch self {
-        case .cannotOpen(let url): return "Bild konnte nicht geöffnet werden: \(url.path)"
-        case .noFrames(let url): return "Datei enthält keine Bilder: \(url.path)"
-        case .cannotRender: return "Bild konnte nicht in Graustufen umgerechnet werden"
+        case .cannotOpen(let url): return String(localized: "The image could not be opened: \(url.path)")
+        case .noFrames(let url): return String(localized: "The file contains no images: \(url.path)")
+        case .cannotRender: return String(localized: "The image could not be converted to grayscale")
         }
     }
 }

@@ -2,7 +2,7 @@
 //
 //   g13ctl info                      Gefundene G13 anzeigen
 //   g13ctl pattern                   Testbild aufs Display
-//   g13ctl text "Hallo Welt"         Text aufs Display
+//   g13ctl text "Hello World"         Text aufs Display
 //   g13ctl image bild.png|anim.gif   Bild/GIF aufs Display
 //   g13ctl preview bild.png          Bild nur im Terminal anzeigen (ohne G13)
 //   g13ctl clear                     Display leeren
@@ -13,25 +13,25 @@ import Foundation
 import G13Kit
 
 let usage = """
-Benutzung: g13ctl <Befehl> [Optionen]
+Usage: g13ctl <command> [options]
 
-Befehle:
-  info                         Gefundene G13 anzeigen
-  pattern                      Testbild aufs Display schicken
-  text "<Text>"                Text zentriert anzeigen (bis 5 Zeilen)
-  image <Datei>                PNG/JPEG/GIF anzeigen, animierte GIFs laufen in Schleife
-  preview <Datei> | --text "<Text>" | --pattern
-                               Ergebnis nur im Terminal zeigen, keine G13 nötig
-  clear                        Display leeren
-  backlight <R> <G> <B>        Hintergrundfarbe setzen (je 0–255)
-  keys                         Tasten und Joystick mitlesen (Strg-C beendet)
+Commands:
+  info                         Show connected G13s
+  pattern                      Send a test pattern to the display
+  text "<text>"                Show centered text (up to 5 lines)
+  image <file>                 Show PNG/JPEG/GIF, animated GIFs loop
+  preview <file> | --text "<text>" | --pattern
+                               Show the result in the terminal only, no G13 needed
+  clear                        Clear the display
+  backlight <R> <G> <B>        Set the backlight color (0–255 each)
+  keys                         Watch keys and joystick (Ctrl-C to quit)
 
-Optionen für image/preview:
-  --fit | --fill | --stretch   Skalierung auf 160x43 (Standard: --fit)
-  --threshold <0-255>          Fester Schwellwert statt Dithering
-  --invert                     Dunkle statt helle Bildpunkte leuchten lassen
-  --once                       Animation nur einmal abspielen
-  --invert-display             Fertigen Frame invertieren (auch für text/pattern)
+Options for image/preview:
+  --fit | --fill | --stretch   Scaling to 160x43 (default: --fit)
+  --threshold <0-255>          Fixed threshold instead of dithering
+  --invert                     Light up dark instead of light pixels
+  --once                       Play an animation only once
+  --invert-display             Invert the finished frame (also for text/pattern)
 """
 
 struct Options {
@@ -65,14 +65,14 @@ func parse(_ args: ArraySlice<String>) -> Options {
         case "--once": options.once = true
         case "--pattern": options.previewPattern = true
         case "--threshold":
-            guard let value = it.next(), let number = UInt8(value) else { fail("--threshold braucht eine Zahl von 0 bis 255") }
+            guard let value = it.next(), let number = UInt8(value) else { fail("--threshold needs a number from 0 to 255") }
             options.threshold = number
         case "--text":
-            guard let value = it.next() else { fail("--text braucht einen Text") }
+            guard let value = it.next() else { fail("--text needs a text") }
             options.previewText = value
         case "-h", "--help": print(usage); exit(0)
         default:
-            if arg.hasPrefix("--") { fail("Unbekannte Option: \(arg)\n\n\(usage)") }
+            if arg.hasPrefix("--") { fail("Unknown option: \(arg)\n\n\(usage)") }
             options.positional.append(arg)
         }
     }
@@ -123,34 +123,34 @@ case "info":
     if devices.isEmpty { fail(G13Error.notFound.description) }
     for (index, device) in devices.enumerated() {
         print("[\(index)] \(device.manufacturer) \(device.productName)")
-        print("    Seriennummer:  \(device.serialNumber ?? "–")")
+        print("    Serial number: \(device.serialNumber ?? "–")")
         print("    Location-ID:   0x\(String(device.locationID, radix: 16))")
-        print("    Max. Output-Report:  \(device.maxOutputReportSize.map { String($0) } ?? "?") Byte (LCD braucht \(LCDFrame.reportSize))")
-        print("    Max. Feature-Report: \(device.maxFeatureReportSize.map { String($0) } ?? "?") Byte")
+        print("    Max. output report:  \(device.maxOutputReportSize.map { String($0) } ?? "?") bytes (LCD needs \(LCDFrame.reportSize))")
+        print("    Max. feature report: \(device.maxFeatureReportSize.map { String($0) } ?? "?") bytes")
     }
 
 case "pattern":
     send(finish(.testPattern(), options), to: openDevice())
-    print("Testbild gesendet.")
+    print("Test pattern sent.")
 
 case "text":
-    guard !options.positional.isEmpty else { fail("Benutzung: g13ctl text \"<Text>\"") }
+    guard !options.positional.isEmpty else { fail("Usage: g13ctl text \"<text>\"") }
     send(finish(.text(options.positional.joined(separator: " ")), options), to: openDevice())
-    print("Text gesendet.")
+    print("Text sent.")
 
 case "clear":
     send(LCDFrame(), to: openDevice())
-    print("Display geleert.")
+    print("Display cleared.")
 
 case "image":
-    guard let path = options.positional.first else { fail("Benutzung: g13ctl image <Datei>") }
+    guard let path = options.positional.first else { fail("Usage: g13ctl image <file>") }
     let frames = loadFrames(path, options)
     let device = openDevice()
     if frames.count == 1 {
         send(frames[0].frame, to: device)
-        print("Bild gesendet.")
+        print("Image sent.")
     } else {
-        print("Animation mit \(frames.count) Frames\(options.once ? "" : ", Strg-C beendet").")
+        print("Animation with \(frames.count) frames\(options.once ? "" : ", Ctrl-C to quit").")
         repeat {
             for item in frames {
                 send(item.frame, to: device)
@@ -167,23 +167,23 @@ case "preview":
         frame = finish(.text(text), options)
     } else if let path = options.positional.first {
         let frames = loadFrames(path, options)
-        if frames.count > 1 { print("Animation mit \(frames.count) Frames, Vorschau zeigt Frame 1.") }
+        if frames.count > 1 { print("Animation with \(frames.count) frames, the preview shows frame 1.") }
         frame = frames[0].frame
     } else {
-        fail("Benutzung: g13ctl preview <Datei> | --text \"<Text>\" | --pattern")
+        fail("Usage: g13ctl preview <file> | --text \"<text>\" | --pattern")
     }
     print(frame.asciiPreview())
 
 case "backlight":
     let values = options.positional.compactMap { UInt8($0) }
-    guard values.count == 3 else { fail("Benutzung: g13ctl backlight <R> <G> <B>  (je 0–255)") }
+    guard values.count == 3 else { fail("Usage: g13ctl backlight <R> <G> <B>  (0–255 each)") }
     do { try openDevice().setBacklight(red: values[0], green: values[1], blue: values[2]) } catch { fail("\(error)") }
-    print("Hintergrundfarbe gesetzt.")
+    print("Backlight color set.")
 
 case "keys":
     let device = openDevice()
     var previous = G13InputReport()
-    print("Lese Tasten mit, Strg-C beendet.")
+    print("Watching keys, Ctrl-C to quit.")
     device.startInputMonitoring { report in
         let (pressed, released) = report.changes(since: previous)
         for key in pressed.sorted(by: { $0.bitIndex < $1.bitIndex }) { print("▼ \(key.rawValue)") }
@@ -199,7 +199,7 @@ case "-h", "--help", "help":
     print(usage)
 
 default:
-    fail("Unbekannter Befehl: \(command)\n\n\(usage)")
+    fail("Unknown command: \(command)\n\n\(usage)")
 }
 
 #else
@@ -213,7 +213,7 @@ case "preview"? where options.previewPattern:
 case "preview"? where options.previewText != nil:
     print(finish(.text(options.previewText!), options).asciiPreview())
 default:
-    fail("Auf dieser Plattform gehen nur `preview --text` und `preview --pattern`.")
+    fail("Only `preview --text` and `preview --pattern` work on this platform.")
 }
 
 #endif

@@ -18,9 +18,9 @@ public struct ProfileLibrary: Codable, Equatable, Sendable {
     /// Drei Profile, passend zu M1/M2/M3.
     public static func makeDefault() -> ProfileLibrary {
         ProfileLibrary(profiles: [
-            G13Profile(name: "Profil 1", backlight: RGBColor(red: 0, green: 120, blue: 255)),
-            G13Profile(name: "Profil 2", backlight: RGBColor(red: 255, green: 80, blue: 0)),
-            G13Profile(name: "Profil 3", backlight: RGBColor(red: 0, green: 200, blue: 60)),
+            G13Profile(name: String(localized: "Profile \(1)"), backlight: RGBColor(red: 0, green: 120, blue: 255)),
+            G13Profile(name: String(localized: "Profile \(2)"), backlight: RGBColor(red: 255, green: 80, blue: 0)),
+            G13Profile(name: String(localized: "Profile \(3)"), backlight: RGBColor(red: 0, green: 200, blue: 60)),
         ])
     }
 

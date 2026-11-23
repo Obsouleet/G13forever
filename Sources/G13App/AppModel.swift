@@ -19,7 +19,7 @@ final class AppModel: ObservableObject {
         didSet { libraryDidChange(from: oldValue) }
     }
     @Published private(set) var isConnected = false
-    @Published private(set) var statusText = "Suche G13 …"
+    @Published private(set) var statusText = String(localized: "Looking for G13…")
     @Published private(set) var canSendKeys = KeyInjector.canSendKeys
     /// Letzter Tastendruck auf der G13, damit der Editor die Taste auswählen kann.
     @Published private(set) var lastKeyPress: G13KeyPress?
@@ -41,14 +41,14 @@ final class AppModel: ObservableObject {
             loaded = try store.load()
         } catch {
             // Kaputte Datei nicht überschreiben, sondern beiseitelegen.
-            let backup = store.libraryURL.deletingPathExtension().appendingPathExtension("defekt.json")
+            let backup = store.libraryURL.deletingPathExtension().appendingPathExtension("corrupt.json")
             try? FileManager.default.removeItem(at: backup)
             try? FileManager.default.moveItem(at: store.libraryURL, to: backup)
-            loadError = "profiles.json war nicht lesbar und liegt jetzt als \(backup.lastPathComponent) daneben."
+            loadError = String(localized: "profiles.json could not be read and was renamed to \(backup.lastPathComponent).")
             loaded = .makeDefault()
         }
         library = loaded
-        engine = BindingEngine(profile: loaded.activeProfile ?? G13Profile(name: "Profil"))
+        engine = BindingEngine(profile: loaded.activeProfile ?? G13Profile(name: String(localized: "Profile")))
         player.output = { [weak self] frame in self?.send(frame) }
     }
 
@@ -85,7 +85,7 @@ final class AppModel: ObservableObject {
         release()
         player.stop()
         if let device {
-            try? device.send(.text("G13forever beendet"))
+            try? device.send(.text(String(localized: "G13forever closed")))
         }
     }
 
@@ -94,17 +94,17 @@ final class AppModel: ObservableObject {
     private func connect() {
         do {
             guard let found = try G13Device.findAll().first else {
-                setDisconnected("G13 nicht gefunden")
+                setDisconnected(String(localized: "G13 not found"))
                 return
             }
             device = found
             isConnected = true
-            statusText = "G13 verbunden"
+            statusText = String(localized: "G13 connected")
             found.startInputMonitoring { [weak self] report in
                 MainActor.assumeIsolated { self?.handle(report) }
             }
             found.onRemoval { [weak self] in
-                MainActor.assumeIsolated { self?.setDisconnected("G13 abgezogen") }
+                MainActor.assumeIsolated { self?.setDisconnected(String(localized: "G13 unplugged")) }
             }
             applyActiveProfile(showBanner: true)
         } catch {
@@ -126,7 +126,7 @@ final class AppModel: ObservableObject {
         do {
             try device.send(frame)
         } catch {
-            setDisconnected("Verbindung zur G13 verloren")
+            setDisconnected(String(localized: "Connection to the G13 lost"))
         }
     }
 
@@ -175,7 +175,7 @@ final class AppModel: ObservableObject {
     }
 
     func addProfile() {
-        var profile = G13Profile(name: "Profil \(library.profiles.count + 1)")
+        var profile = G13Profile(name: String(localized: "Profile \(library.profiles.count + 1)"))
         profile.backlight = G13Kit.RGBColor(red: 255, green: 255, blue: 255)
         library.profiles.append(profile)
     }
@@ -184,7 +184,7 @@ final class AppModel: ObservableObject {
         guard let index = library.index(of: id) else { return }
         var copy = library.profiles[index]
         copy.id = UUID()
-        copy.name += " Kopie"
+        copy.name = String(localized: "\(copy.name) copy")
         if let file = copy.display.imageFile,
            let newFile = try? store.importImage(from: store.imageURL(for: file)) {
             copy.display.imageFile = newFile
@@ -210,7 +210,7 @@ final class AppModel: ObservableObject {
             library.profiles[index].display.imageFile = file
             store.removeUnusedImages(keeping: library)
         } catch {
-            statusText = "Bild konnte nicht übernommen werden: \(error.localizedDescription)"
+            statusText = String(localized: "The image could not be added: \(error.localizedDescription)")
         }
     }
 
@@ -242,7 +242,7 @@ final class AppModel: ObservableObject {
         do {
             if enabled { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
         } catch {
-            statusText = "Autostart geht nur aus der gebauten App (G13forever.app): \(error.localizedDescription)"
+            statusText = String(localized: "Launch at login only works from the built app (G13forever.app): \(error.localizedDescription)")
         }
         launchAtLogin = SMAppService.mainApp.status == .enabled
     }
@@ -250,7 +250,7 @@ final class AppModel: ObservableObject {
     // MARK: Änderungen anwenden
 
     private func libraryDidChange(from old: ProfileLibrary) {
-        do { try store.save(library) } catch { statusText = "Speichern fehlgeschlagen: \(error.localizedDescription)" }
+        do { try store.save(library) } catch { statusText = String(localized: "Saving failed: \(error.localizedDescription)") }
 
         let oldActive = old.activeProfile
         guard let active = library.activeProfile else { return }

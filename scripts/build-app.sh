@@ -17,7 +17,9 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN/G13App" "$APP/Contents/MacOS/G13forever"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 cp Sources/G13Kit/Resources/*.svg "$APP/Contents/Resources/"
+# Englisch steht im Code, die Übersetzungen in Resources/<Sprache>.lproj.
+cp -R Resources/*.lproj "$APP/Contents/Resources/"
 codesign --force --sign "${SIGN_IDENTITY:--}" "$APP"
 
-echo "Fertig: $APP"
-echo "Starten mit: open $APP"
+echo "Done: $APP"
+echo "Start it with: open $APP"
