@@ -38,9 +38,9 @@ struct G13foreverApp: App {
         Window("G13 Profile", id: SettingsView.windowID) {
             SettingsView()
                 .environmentObject(delegate.model)
-                .frame(minWidth: 820, minHeight: 560)
+                .frame(minWidth: 1180, minHeight: 680)
         }
-        .defaultSize(width: 960, height: 680)
+        .defaultSize(width: 1240, height: 820)
     }
 }
 

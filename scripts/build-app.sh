@@ -16,6 +16,7 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN/G13App" "$APP/Contents/MacOS/G13forever"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
+cp Sources/G13Kit/Resources/*.svg "$APP/Contents/Resources/"
 codesign --force --sign "${SIGN_IDENTITY:--}" "$APP"
 
 echo "Fertig: $APP"

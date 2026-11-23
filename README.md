@@ -13,6 +13,7 @@ macOS-Treiber für die Logitech G13 in Swift, mit Bildern und GIFs auf dem
 | `Sources/G13Kit/LCD` | `LCDFrame` (160x43-Framebuffer, 992-Byte-Report), 5x7-Schrift, Graustufen→1 Bit (Schwellwert oder Floyd-Steinberg), `ImageLoader` für PNG/JPEG/GIF |
 | `Sources/G13Kit/Profiles` | `G13Profile`/`ProfileLibrary` (JSON), `KeyCombo` und `KeyCodes` (Tastenkürzel), `BindingEngine` (Tasten → Aktionen), `ProfileRenderer` |
 | `Sources/G13Kit/Input` | `KeyInjector`: schickt Tastendrücke und Text über CGEvent an macOS |
+| `Sources/G13Kit/Artwork`, `Sources/G13Kit/Resources` | Bild der G13 (`g13.svg`) und die Klickflächen der Tasten (`g13-keys.svg`) |
 | `Sources/G13App` | Menüleisten-App (SwiftUI) |
 | `Sources/G13Kit/Device` | `G13Device` (IOKit HID: finden, LCD-Frame senden, Hintergrundfarbe, M-LEDs, Tasten mitlesen), `G13InputReport` |
 | `Sources/g13ctl` | Kommandozeilen-Werkzeug zum Ausprobieren |
@@ -52,7 +53,8 @@ einschalten. Pro Profil lassen sich einstellen:
   M1–M3/MR: Tastenkürzel (z. B. `cmd+shift+4`, `f5`, `space` oder per
   „Aufnehmen“), Text tippen, zu einem Profil wechseln, nächstes/vorheriges Profil.
   Tastenkürzel bleiben gedrückt, solange die G13-Taste gedrückt ist, das passt
-  auch für Spiele. Drückt man eine Taste auf der G13, springt die Liste zu ihr.
+  auch für Spiele. Die Taste wählt man im Bild der G13 per Klick oder durch
+  Drücken auf der G13, ihre Einstellungen stehen direkt darunter.
 
 M1, M2 und M3 wechseln standardmäßig zu Profil 1, 2 und 3, die passende LED
 leuchtet. Beim Wechsel blendet das Display kurz den Profilnamen ein.
