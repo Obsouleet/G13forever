@@ -1,0 +1,38 @@
+# Ein Tag wie v1.2.3 baut die App für Apple silicon und Intel (ad-hoc signiert)
+# und hängt sie als G13forever.zip an das GitHub Release dieses Tags.
+name: Release
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-26
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Tests
+        run: swift test
+      - name: App bauen und packen
+        run: UNIVERSAL=1 ZIP=1 VERSION="${TAG#v}" scripts/build-app.sh
+      - name: Release veröffentlichen
+        # Wurde das Release schon auf der Website angelegt, kommt nur die Datei dazu.
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" build/G13forever.zip --clobber
+            exit
+          fi
+          cat > notes.md <<'NOTES'
+          Download **G13forever.zip** below (Apple silicon and Intel, macOS 14 or newer).
+          The app is not notarized by Apple. How to open it the first time, and what to do
+          after an update: [install guide](https://github.com/Obsouleet/G13forever#download).
+          NOTES
+          gh release create "$TAG" build/G13forever.zip --verify-tag \
+            --title "G13forever ${TAG#v}" --generate-notes --notes-file notes.md

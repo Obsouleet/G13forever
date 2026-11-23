@@ -4,6 +4,9 @@ You don't need to know how to program. You need a Mac with macOS 14 or newer,
 a G13, an internet connection, and some patience for the Xcode download.
 **It costs nothing, and you don't need an Apple developer membership.**
 
+Don't want to build? There is a [finished download](README.md#download). It needs
+only step 6 of this guide.
+
 The commands below go into the app **Terminal** (press `cmd+space`, type
 `Terminal`, press Return). Copy one gray box at a time, paste it with `cmd+v`,
 press Return, and wait until it's done before the next one.
@@ -155,7 +158,8 @@ You allow key presses one more time after the first build with it.
 | `no such file or directory: scripts/build-app.sh` | You're in the wrong folder: `cd ~/G13forever` |
 | `permission denied: scripts/build-app.sh` | `bash scripts/build-app.sh` |
 | The build fails in some other way | `rm -rf .build`, then build again. Still broken? Open an issue with your macOS and Xcode versions (`xcodebuild -version`) and the **first** line containing `error:`. |
-| macOS says the app is damaged or can't be opened | Happens if the files came from a browser download (ZIP) or another Mac. Run `xattr -dr com.apple.quarantine /Applications/G13forever.app`. Better: use `git clone` and build on this Mac. Only do this for an app you built yourself. |
+| macOS says Apple can't check the app, or it can't be opened | Normal for the [download](README.md#download): use **Open Anyway** as described there. For an app you built yourself it happens if the source code came from a browser (ZIP) or another Mac: use `git clone` and build on this Mac. |
+| macOS says the app is damaged | The ZIP didn't arrive intact, or a program changed the app. Download it again, and unpack it by double-clicking it in the Finder. |
 | No icon in the menu bar | On MacBooks it can be hidden behind the notch; quit some other menu bar apps. Otherwise start it again with `open /Applications/G13forever.app`. |
 | Menu says **G13 not found** | Check the cable, plug the G13 straight into the Mac instead of a hub, and quit other G13 software. `swift run g13ctl info` shows whether the G13 is seen. |
 | Menu shows a message about **Input Monitoring** | Allow G13forever under **Privacy & Security > Input Monitoring**, then quit and restart the app. |
